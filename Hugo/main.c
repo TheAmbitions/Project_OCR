@@ -1,4 +1,5 @@
 #include "input_sudoku.h"
+#include "output_sudoku.h"
 
 //je fais la déclaration ici parce que g la flemme de le faire dans autre fichier pour ce cas
 void print_grid(int grid[9][9]);
@@ -21,6 +22,12 @@ int main()
 	input_sudoku("sudoku_test.txt", grid);
 
 	print_grid(grid);
+
+	//Résolution du sudoku
+	//TODO
+	
+	output_sudoku(grid);
+	printf("OK\n");
 
 	return 0;
 }
