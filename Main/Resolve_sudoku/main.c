@@ -1,5 +1,6 @@
 #include "input_sudoku.h"
 #include "output_sudoku.h"
+#include "brute_force.h"
 
 //je fais la déclaration ici parce que g la flemme de le faire dans autre fichier pour ce cas
 void print_grid(int grid[9][9]);
@@ -21,13 +22,18 @@ int main()
 	initialisation_array(grid);
 	input_sudoku("sudoku_test.txt", grid);
 
+
 	print_grid(grid);
 
 	//Résolution du sudoku
-	//TODO
-	
+	if (BruteSolve(grid, 0, 0) == 1)
+	{
 	output_sudoku(grid);
+	printf("\n");
+	print_grid(grid);
 	printf("OK\n");
-
+	}
+	else
+		printf ("No solution exists\n");
 	return 0;
 }
