@@ -22,17 +22,20 @@ int main()
 	initialisation_array(grid);
 	input_sudoku("sudoku_test.txt", grid);
 
-
+	// Draw the grid before its resolution 
 	print_grid(grid);
 
 	//Résolution du sudoku
+	// Resolve the grid
 	if (BruteSolve(grid, 0, 0) == 1)
 	{
 	output_sudoku(grid);
 	printf("\n");
+	// Print the grid solution with Ok if a solution exist
 	print_grid(grid);
 	printf("OK\n");
 	}
+	// No solution exists
 	else
 		printf ("No solution exists\n");
 	return 0;
