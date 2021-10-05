@@ -1,3 +1,4 @@
+#include <stddef.h>
 #include "sigmoid.h"
 #include "backward.h"
 #include "matrix.h"
@@ -11,7 +12,7 @@ void backward(Network *net, double x[1][net->inputsize], double o[1][net->output
 	//update errors of the output layer
 	double o_delta[1][net->outputsize];
 
-	int i;
+	size_t i;
 	for (i = 0; i < net->outputsize; i++)
 		o_delta[0][i] = (y[0][i] - o[0][i]) * sigmoid_prime(o[0][i]);
 
@@ -23,7 +24,7 @@ void backward(Network *net, double x[1][net->inputsize], double o[1][net->output
 	matrix_product(1, net->outputsize, net->hiddensize, o_delta, w2_t, z2_delta);
 	
 	for (i = 0; i < net->hiddensize; i++)
-		z2_delta[0][i] = z2_delta[0][i] * sigmoid_prime(net->values[0][i]);
+		z2_delta[0][i] = z2_delta[0][i] * 0.1 * sigmoid_prime(net->values[0][i]);
 
 	//update w1 of the network
 	double input_t[net->inputsize][1];
@@ -34,10 +35,10 @@ void backward(Network *net, double x[1][net->inputsize], double o[1][net->output
 	matrix_sum(net->inputsize, net->hiddensize, net->w1, w1_newvalue, net->w1);
 
 	//update w2 of the network
-	double biases_t[net->hiddensize][1];
-	transpose(1, net-> hiddensize, net->values, biases_t);
+	double values_t[net->hiddensize][1];
+	transpose(1, net-> hiddensize, net->values, values_t);
 	
 	double w2_newvalue[net->hiddensize][net->outputsize];
-	matrix_product(net->hiddensize, 1, net->outputsize, biases_t, o_delta, w2_newvalue);
+	matrix_product(net->hiddensize, 1, net->outputsize, values_t, o_delta, w2_newvalue);
 	matrix_sum(net->hiddensize, net->outputsize, net->w2, w2_newvalue, net->w2);
 }

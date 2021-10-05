@@ -8,7 +8,7 @@
 #define INPUTSIZE 784
 #define HIDDENSIZE 15
 
-void generateWeights(int n, int p, double w[n][p])
+void generateRand(int n, int p, double w[n][p])
 {
 	int i,j;
 	int rand_mid = RAND_MAX / 2;
@@ -31,14 +31,17 @@ void init_network(Network *net)
 	net->outputsize = 10;
 	net->hiddensize = HIDDENSIZE;
 
-	generateWeights(INPUTSIZE, HIDDENSIZE, net->w1);
-	generateWeights(HIDDENSIZE, net->outputsize, net->w2);
+	generateRand(1, HIDDENSIZE, net->b1);
+	generateRand(1, 10, net->b2);
+	generateRand(INPUTSIZE, HIDDENSIZE, net->w1);
+	generateRand(HIDDENSIZE, net->outputsize, net->w2);
 }
 
 void network()
 {
-	Network network = {0, 0, 0, {}, {}, {} };
+	Network network = { 0, 0, 0, {}, {}, {}, {}, {} };
 	init_network(&network);
+
 	for (int i = 0; i < INPUTSIZE; i++)
 		for (int j = 0; j < HIDDENSIZE; j++)
 			printf("%f\n", network.w1[i][j]);
@@ -59,7 +62,7 @@ void network()
 
 	double output[1][10];
 	double input[1][784];
-	generateWeights(1, 784, input);
+	generateRand(1, 784, input);
 	feedforward(&network, input, output);
 
 }
