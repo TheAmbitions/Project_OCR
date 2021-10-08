@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
- #include <err.h>
+#include <err.h>
 #include "SDL/SDL.h"
 #include "SDL/SDL_image.h"
 #include "pixel_operations.h"
@@ -108,6 +108,28 @@ int main()
 
 	update_surface(screen_surface, image_surface);
 	
+	wait_for_keypressed();
+	
+	for(int i = 0; i < w; i++)
+	{
+		for(int j = 0; j < h; j++)
+		{
+			pixel = get_pixel(image_surface, i, j);
+			SDL_GetRGB(pixel, image_surface->format, &r, &g, &b);
+			if(g < 128 && b < 128 && r < 128)
+     			{
+		      		pixel = SDL_MapRGB(image_surface->format, 0, 0, 0);
+		     	}
+		     	else
+		     	{
+		     	 	pixel = SDL_MapRGB(image_surface->format, 255, 255, 255);
+		     	}
+		     	
+			put_pixel(image_surface,i,j,pixel);
+		}
+  	}
+	
+	update_surface(screen_surface, image_surface);
 	wait_for_keypressed();
 	
 	// Free the image surface.
