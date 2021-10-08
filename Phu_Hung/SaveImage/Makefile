@@ -5,9 +5,9 @@ CFLAGS= -Wall -Wextra -Werror -std=c99 -O3
 LDFLAGS=
 LDLIBS= `pkg-config --libs sdl` -lSDL_image
 
-all: main
+all: SaveImage
 
-main: main.o
+main: SaveImage.o
 
 clean:
 	${RM} *.o
