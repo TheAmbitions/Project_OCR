@@ -78,7 +78,7 @@ int main()
 	// Initialize the SDL
 	init_sdl();
 
-	image_surface = load_image("hihi.png");
+	image_surface = load_image("image_05.jpeg");
 	// Display the image.
 	screen_surface = display_image(image_surface);
 
