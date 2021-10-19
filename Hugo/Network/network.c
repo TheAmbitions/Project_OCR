@@ -1,16 +1,29 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "network.h"
-#include "sigmoid.h"
 #include "feedforward.h"
-#include "matrix.h"
+#include "backward.h"
+#include "train.h"
 
-#define INPUTSIZE 784
-#define HIDDENSIZE 15
-
-void generateRand(int n, int p, double w[n][p])
+void generateBiases(size_t n, double b[n])
 {
-	int i,j;
+	size_t i;
+	int rand_mid = RAND_MAX / 2;
+
+	for (i = 0; i < n; i++)
+	{
+		double sign;
+		if (rand() >= rand_mid)
+			sign = 1.0;
+		else
+			sign = -1.0;
+		b[i] = sign * ((double)rand() / RAND_MAX);
+	}
+}
+
+void generateWeights(size_t n, size_t p, double w[n][p])
+{
+	size_t i, j;
 	int rand_mid = RAND_MAX / 2;
 
 	for (i = 0; i < n; i++)
@@ -21,20 +34,37 @@ void generateRand(int n, int p, double w[n][p])
 				sign = 1.0;
 			else
 				sign = -1.0;
-			w[i][j] = sign * ((double) rand() / RAND_MAX);
+			w[i][j] = sign * ((double)rand() / RAND_MAX);
 		}
 }
 
-void init_network(Network *net)
+void init_network(Network* net)
 {
 	net->inputsize = INPUTSIZE;
-	net->outputsize = 10;
+	net->outputsize = OUTPUTSIZE;
 	net->hiddensize = HIDDENSIZE;
 
-	generateRand(1, HIDDENSIZE, net->b1);
-	generateRand(1, 10, net->b2);
-	generateRand(INPUTSIZE, HIDDENSIZE, net->w1);
-	generateRand(HIDDENSIZE, net->outputsize, net->w2);
+	generateBiases(HIDDENSIZE, net->b1);
+	generateBiases(1, net->b2);
+	generateWeights(INPUTSIZE, HIDDENSIZE, net->w1);
+	generateWeights(HIDDENSIZE, OUTPUTSIZE, net->w2);
+}
+
+size_t eval(double o[OUTPUTSIZE])
+{	
+	double max = o[0];
+	size_t max_i = 0;
+	size_t i;
+	for (i = 1; i < OUTPUTSIZE; i++)
+	{
+		if (max < o[i])
+		{
+			max = o[i];
+			max_i = i;
+		}
+	}
+
+	return max_i;
 }
 
 void network()
@@ -42,27 +72,60 @@ void network()
 	Network network = { 0, 0, 0, {}, {}, {}, {}, {} };
 	init_network(&network);
 
-	for (int i = 0; i < INPUTSIZE; i++)
-		for (int j = 0; j < HIDDENSIZE; j++)
-			printf("%f\n", network.w1[i][j]);
+	printf("Before training:\n");
+	size_t i;
+	double o[OUTPUTSIZE];
+	double expected[OUTPUTSIZE];
+	double inputlayer[INPUTSIZE];
 
-	double x = 0.898989;
-	printf("sigmoid de %f = %f\n", x, sigmoid(x));
-	printf("dérivé de sigmoid de %f = %f\n", x, sigmoid_prime(x));
+	//initialization_layer(&network, "Test_number/0.txt", "Test_number/0e.txt", inputlayer, o, expected, 0);
+	initialization_layer(&network, "Test_number/1.txt", "Test_number/1e.txt", inputlayer, o, expected, 0);
+	/*initialization_layer(&network, "Test_number/2.txt", "Test_number/2e.txt", inputlayer, o, expected, 0);
+	initialization_layer(&network, "Test_number/3.txt", "Test_number/3e.txt", inputlayer, o, expected, 0);
+	initialization_layer(&network, "Test_number/4.txt", "Test_number/4e.txt", inputlayer, o, expected, 0);
+	initialization_layer(&network, "Test_number/5.txt", "Test_number/5e.txt", inputlayer, o, expected, 0);
+	initialization_layer(&network, "Test_number/6.txt", "Test_number/6e.txt", inputlayer, o, expected, 0);
+	initialization_layer(&network, "Test_number/7.txt", "Test_number/7e.txt", inputlayer, o, expected, 0);
+	initialization_layer(&network, "Test_number/8.txt", "Test_number/8e.txt", inputlayer, o, expected, 0);
+	initialization_layer(&network, "Test_number/9.txt", "Test_number/9e.txt", inputlayer, o, expected, 0);
 
-	double m1[1][4] = {{1.0, 3.0, 4.0, 5.0}};
-	double m2[4][2] = {{1.0, 0.0}, 
-			{6.0, 9.0}, 
-			{3.0, 9.0}, 
-			{2.0, 0.0}};
-	double mul[1][2];
-	matrix_product(1, 4, 2, m1, m2, mul);
-	for (int i = 0; i < 2; i++)
-		printf("%f\n", mul[0][i]);
-
-	double output[1][10];
-	double input[1][784];
-	generateRand(1, 784, input);
-	feedforward(&network, input, output);
+	unsigned long max_it = 1000;
+	printf("\n");
+	printf("-----------------------\n");
+	printf("training...\n");
+	train_network(&network, max_it, inputlayer, expected, o);
+	printf("-----------------------\n");
+	printf("\n");
+	
+	printf("After training (%lu iterations):\n", max_it);
+	initialization_layer(&network, "Test_number/0.txt", "Test_number/0e.txt", inputlayer, o, expected, 0);
+	initialization_layer(&network, "Test_number/1.txt", "Test_number/1e.txt", inputlayer, o, expected, 0);
+	initialization_layer(&network, "Test_number/2.txt", "Test_number/2e.txt", inputlayer, o, expected, 0);
+	initialization_layer(&network, "Test_number/3.txt", "Test_number/3e.txt", inputlayer, o, expected, 0);
+	initialization_layer(&network, "Test_number/4.txt", "Test_number/4e.txt", inputlayer, o, expected, 0);
+	initialization_layer(&network, "Test_number/5.txt", "Test_number/5e.txt", inputlayer, o, expected, 0);
+	initialization_layer(&network, "Test_number/6.txt", "Test_number/6e.txt", inputlayer, o, expected, 0);
+	initialization_layer(&network, "Test_number/7.txt", "Test_number/7e.txt", inputlayer, o, expected, 0);
+	initialization_layer(&network, "Test_number/8.txt", "Test_number/8e.txt", inputlayer, o, expected, 0);
+	initialization_layer(&network, "Test_number/9.txt", "Test_number/9e.txt", inputlayer, o, expected, 0);
+	
+	printf("\n");
+	printf("-----------------------\n");
+	printf("training...\n");
+	train_network(&network, max_it, inputlayer, expected, o);
+	printf("-----------------------\n");
+	printf("\n");
+	
+	printf("After training (%lu iterations):\n", 2 * max_it);
+	initialization_layer(&network, "Test_number/0.txt", "Test_number/0e.txt", inputlayer, o, expected, 0);
+	initialization_layer(&network, "Test_number/1.txt", "Test_number/1e.txt", inputlayer, o, expected, 0);
+	initialization_layer(&network, "Test_number/2.txt", "Test_number/2e.txt", inputlayer, o, expected, 0);
+	initialization_layer(&network, "Test_number/3.txt", "Test_number/3e.txt", inputlayer, o, expected, 0);
+	initialization_layer(&network, "Test_number/4.txt", "Test_number/4e.txt", inputlayer, o, expected, 0);
+	initialization_layer(&network, "Test_number/5.txt", "Test_number/5e.txt", inputlayer, o, expected, 0);
+	initialization_layer(&network, "Test_number/6.txt", "Test_number/6e.txt", inputlayer, o, expected, 0);
+	initialization_layer(&network, "Test_number/7.txt", "Test_number/7e.txt", inputlayer, o, expected, 0);
+	initialization_layer(&network, "Test_number/8.txt", "Test_number/8e.txt", inputlayer, o, expected, 0);
+	initialization_layer(&network, "Test_number/9.txt", "Test_number/9e.txt", inputlayer, o, expected, 0);*/
 
 }

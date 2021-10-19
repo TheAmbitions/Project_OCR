@@ -3,6 +3,6 @@
 
 #include "network.h"
 
-void feedforward(Network *net, double input[1][net->inputsize], double output[1][net->outputsize]);
+void feedforward(Network *net, double input[net->inputsize], double output[net->outputsize]);
 
 #endif
