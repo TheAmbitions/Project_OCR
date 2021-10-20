@@ -23,7 +23,20 @@ int Image_Save_BMP(const char* image_name, const char* path)
 
 	return 0;
 }*/
-int main()
+int main(int argc, char* argv[])
 {
-    return Image_Save_BMP("image.png", "testBMP.bmp");
+    if (argc < 2 || argc > 3)
+    {
+	    printf ("Enter the image to save and/or the path with .bmp at the end\n");
+	    return -1;
+    }
+
+    #define imagename argv[1]
+    if (argc != 2)
+    {
+        #define path argv[2]
+	return Image_Save_BMP(imagename, path);    
+    }
+    
+    return Image_Save_BMP(imagename, "result.bmp");
 }
