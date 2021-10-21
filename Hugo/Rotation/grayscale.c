@@ -134,7 +134,7 @@ return destination;
 }
 
 
-int apply_rotation()
+int main()
 {
     SDL_Surface* image_surface;
     SDL_Surface* screen_surface;
@@ -176,6 +176,6 @@ int apply_rotation()
 
     //Free the screen surface
     SDL_FreeSurface (screen_surface);
-    
+
     return 0;
 }

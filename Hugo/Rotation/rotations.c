@@ -134,7 +134,7 @@ return destination;
 }
 
 
-int apply_rotation()
+void apply_rotation(char filename[])
 {
     SDL_Surface* image_surface;
     SDL_Surface* screen_surface;
@@ -145,14 +145,14 @@ int apply_rotation()
     if (scanf("%f", &angle) < 0) 
     {
          printf("you want a positive seuil.\n");
-         return 1;
+         return;
     } 
 
 
     //Init SDL
     init_sdl();
 
-    image_surface = load_image("my_image.jpg");
+    image_surface = load_image(filename);
     
     image_surface = SDL_RotationCentralN (image_surface, angle );
 
@@ -176,6 +176,4 @@ int apply_rotation()
 
     //Free the screen surface
     SDL_FreeSurface (screen_surface);
-    
-    return 0;
 }
