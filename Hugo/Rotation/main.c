@@ -7,7 +7,7 @@
 
 int main ()
 {
-    apply_rotation("my_image.jpg");
+    apply_rotation("image_05.jpeg");
     return 0;
 }
 
