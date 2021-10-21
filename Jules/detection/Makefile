@@ -10,13 +10,13 @@ LDLIBS= `pkg-config --libs sdl SDL_image`
 
 all: main
 
-main: pixel_operations.o canny.o main.o
+main: pixel_operations.o sobel.o main.o
 
 
 clean:
 	${RM} *.o
 	${RM} *.d
-	${RM} canny
+	${RM} sobel
 	${RM} main
 
 # END
