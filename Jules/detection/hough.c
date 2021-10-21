@@ -5,7 +5,7 @@
 #include "SDL/SDL.h"
 #include "SDL/SDL_image.h"
 
-#define M_PI 3.1415927
+#define PI 3.1415927
 
 void SDL_ExitWithError(const char *message);
 
@@ -22,14 +22,14 @@ void hough(SDL_Surface* img)
     double theta = 1;
     double Ntheta = 180/theta;
     double Nrho = floor( sqrt(width * width + height * height))/rho;
-    double dtheta = M_PI / Ntheta;
+    double dtheta = PI / Ntheta;
     double drho = floor(sqrt(width * width + height * height))/Nrho;
-    double accum[Ntheta * Nrho];
+    double accum[(int) (Ntheta * Nrho)];
     double i_rho;
     int seuil = 130;
 
     for (double i = 0; i < Ntheta * Nrho; i++)
-        accum[i] = 0;
+        accum[(int) i] = 0;
 
     for (double y = 0; y < height; y++)
     {
@@ -44,24 +44,24 @@ void hough(SDL_Surface* img)
                     theta = i_theta * dtheta;
                     rho = x * cos(theta) + (height - y) * sin(theta);
                     i_rho = (rho/drho);
-                    if (i_rho>0) && (i_rho < Nrho)
-                        accum [i_theta * width +i_rho] += 1; 
+                    if ((i_rho>0) && (i_rho < Nrho))
+                        accum [(int)(i_theta * width +i_rho)] += 1; 
                 }
             }
         }
     }
     int nb = 0;
-    double accum_seuil[Ntheta * Nrho];
+    double accum_seuil[(int) (Ntheta * Nrho)];
     for (double i = 0; i < Ntheta * Nrho; i++)
-        accum_seuil[i] = accum[i];
+        accum_seuil[(int)i] = accum[(int)i];
     
     for (double i_theta = 0; i_theta < Ntheta; i_theta++)
     {
         for (double i_rho = 0; i_rho < Nrho; i_rho++)
         {
-            if (accum[i_theta* width +i_rho] < seuil)
+            if (accum[(int)(i_theta* width +i_rho)] < seuil)
             {
-                accum_seuil[i_theta * width + i_rho] = 0;
+                accum_seuil[(int)(i_theta * width + i_rho)] = 0;
             }
             else
                 nb += 1;
@@ -76,7 +76,7 @@ void hough(SDL_Surface* img)
     {
         for (double i_rho = 0; i_rho < Nrho; i_rho++)
         {
-            if (accum_seuil[i_theta* width +i_rho] !=0)
+            if (accum_seuil[(int)(i_theta* width +i_rho)] !=0)
             {
                 lignes[i * 2] = i_rho * drho;
                 lignes[i *2 +1] = i_theta * dtheta;
@@ -85,13 +85,13 @@ void hough(SDL_Surface* img)
         }
     }
 
-    double a,b,x0,y0,x1,y1,x2,y2;
-
+    double a,m,x0,y0,x1,y1,x2,y2;
+	
     SDL_Window *window = NULL;
     SDL_Renderer *renderer = NULL;
 
     if (SDL_Init (SDL_INIT_VIDEO) != 0)
-        SDL_ExitWithErro("Initialisation SDL");
+        SDL_ExitWithError("Initialisation SDL");
 
     if(SDL_CreateWindowAndRenderer(img -> w, img -> h, 0, &window, &renderer)
         !=0)
@@ -102,23 +102,25 @@ void hough(SDL_Surface* img)
         rho = lignes[2 * i];
         theta = lignes[2 * i + 1];
         a = cos(theta);
-        b = sin(theta);
+        m = sin(theta);
         x0 = a * rho;
-        y0 = b * rho;
-        x1  = (x0 + 1000 * (-b));
+        y0 = m * rho;
+        x1  = (x0 + 1000 * (-m));
         y1 = (y1 + 1000 * (a));
-        x2 = (x0 - 1000 *(-b));
+        x2 = (x0 - 1000 *(-m));
         y2 = (y0 - 1000 * (a));
 
-        if(SDL_RendererDawLine(renderer,(int)x1, (int)y1, (int)x2, (int)y2) !=0)
+        if(SDL_RenderDrawLine(renderer,(int)x1, (int)y1, (int)x2, (int)y2) !=0)
             SDL_ExitWithError("Impossible de dessiner");
 
     }
 
     SDL_RenderPresent(renderer);
     SDL_Delay(15000);
-    SDL_DestroyRender(renderer);
+    SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
+    
+   
     SDL_Quit();
         
 }
