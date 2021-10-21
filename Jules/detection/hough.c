@@ -5,6 +5,76 @@
 #include "SDL/SDL.h"
 #include "SDL/SDL_image.h"
 
+
+unsigned long Color(int R, int G, int B)
+{//Convertit RGB en long
+	return 65536*R + 256*G + B;
+}
+ 
+void PutPixel(SDL_Surface *surface, int x, int y, unsigned long pixel)
+{
+	int bpp = surface->format->BytesPerPixel;
+	unsigned char *p = (unsigned char *)surface->pixels + y * surface->pitch + x * bpp;
+	if (bpp==4)
+		*(unsigned long*)p = pixel;
+}
+ 
+void drawLine(SDL_Surface* surf,int x1,int y1, int x2,int y2, int R, int G, int B)  // Bresenham
+{
+	unsigned long couleur = Color(R, G, B);
+	int x,y;
+	int Dx,Dy;
+	int xincr,yincr;
+	int erreur;
+	int i;
+ 
+	Dx = abs(x2-x1);
+	Dy = abs(y2-y1);
+	if(x1<x2)
+		xincr = 1;
+	else
+		xincr = -1;
+	if(y1<y2)
+		yincr = 1;
+	else			
+		yincr = -1;
+ 
+	x = x1;
+	y = y1;
+	if(Dx>Dy)
+	{
+		erreur = Dx/2;
+		for(i=0;i<Dx;i++)
+		{
+			x += xincr;
+			erreur += Dy;
+			if(erreur>Dx)
+			{
+				erreur -= Dx;
+				y += yincr;
+			}
+			PutPixel(surf,x, y,couleur);
+		}
+	}
+	else
+	{
+		erreur = Dy/2;
+		for(i=0;i<Dy;i++)
+		{
+			y += yincr;
+			erreur += Dx;
+ 
+			if(erreur>Dy)
+			{
+				erreur -= Dy;
+				x += xincr;
+			}
+			PutPixel(surf,x, y,couleur);
+		}
+	}
+}
+
+
 #define PI 3.1415927
 
 void SDL_ExitWithError(const char *message);
@@ -87,6 +157,8 @@ void hough(SDL_Surface* img)
 
     double a,m,x0,y0,x1,y1,x2,y2;
 	
+    //afficher les droites
+
     SDL_Window *window = NULL;
     SDL_Renderer *renderer = NULL;
 
@@ -110,8 +182,7 @@ void hough(SDL_Surface* img)
         x2 = (x0 - 1000 *(-m));
         y2 = (y0 - 1000 * (a));
 
-        if(SDL_RenderDrawLine(renderer,(int)x1, (int)y1, (int)x2, (int)y2) !=0)
-            SDL_ExitWithError("Impossible de dessiner");
+       drawline(renderer,(int)x1, (int)y1, (int)x2, (int)y2,255,0,0);
 
     }
 
@@ -124,5 +195,7 @@ void hough(SDL_Surface* img)
     SDL_Quit();
         
 }
+
+
 
 
