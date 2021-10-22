@@ -658,7 +658,7 @@ void drawLine(SDL_Surface* surf,int x1,int y1, int x2,int y2, int R, int G, int 
 
 void SDL_ExitWithError(const char *message);
 
-void hough(SDL_Surface* img)
+SDL_Surface* hough(SDL_Surface* img)
 {
 
     Uint32 pixel;
@@ -751,9 +751,10 @@ void hough(SDL_Surface* img)
         x2 = (x0 - 1000 *(-m));
         y2 = (y0 - 1000 * (a));
 
-        drawLine(img,(int)x1, (int)y1, (int)x2,(int)y2,255,0,0);
+       img = drawLine(img,(int)x1, (int)y1, (int)x2,(int)y2,255,0,0);
 
     }
+    return img;
 
 
         
@@ -845,7 +846,7 @@ int main(int argc,char *argv[])
 	//update_surface(screen_surface, image_surface);
 	//wait_for_keypressed();
 	
-	hough(image_surface);
+	image_surface = hough(image_surface);
 	screen_surface =  display_image(image_surface);
 	
 	//update_surface(screen_surface, image_surface);
