@@ -9,7 +9,7 @@ LDLIBS= `pkg-config --libs sdl` -lSDL_image -lm
 
 all: main
 
-main: main.o pixel_operations.o grayscale.o resolve.o brute_force.o input_sudoku.o output_sudoku.o isSafe.o network.o backward.o feedforward.o matrix.o sigmoid.o saveimage.o recognition.o display.o sobel.o
+main: main.o pixel_operations.o grayscale.o resolve.o brute_force.o input_sudoku.o output_sudoku.o isSafe.o network.o backward.o feedforward.o matrix.o sigmoid.o saveimage.o recognition.o display.o sobel.o rotations.o
 
 clean:
 	${RM} *.o
