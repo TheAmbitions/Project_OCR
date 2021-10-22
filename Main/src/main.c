@@ -15,6 +15,7 @@
 
 void wait_for_key(char *input)
 {
+	printf("\n");
 	printf("Enter a key to continue:");
 	*input = getchar();
 	printf("\n");

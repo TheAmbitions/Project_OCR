@@ -6,7 +6,7 @@ void output_sudoku(int grid[9][9])
 {
 	FILE* file = NULL;
 
-	file = fopen("grid_result.txt", "w");
+	file = fopen("../data/grid_result.txt", "w");
 
 	if (file != NULL)
 	{

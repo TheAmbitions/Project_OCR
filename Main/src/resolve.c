@@ -20,7 +20,7 @@ void resolve()
 	int grid[9][9];
 
 	initialisation_array(grid);
-	input_sudoku("sudoku_test.txt", grid);
+	input_sudoku("../data/sudoku_test.txt", grid);
 
 	// Draw the grid before its resolution 
 	print_grid(grid);

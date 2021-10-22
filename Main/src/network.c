@@ -237,9 +237,9 @@ void network()
 		else if (input1 == 't')
 			train(&network);
 		else if (input1 == 'l')
-			load(&network, "save.txt");
+			load(&network, "../data/save.txt");
 		else if (input1 == 's')
-			save(&network, "save.txt");
+			save(&network, "../data/save.txt");
 		else if (input1 == '1' || input1 == '0')
 		{
 			printf("Enter a second key: ");
