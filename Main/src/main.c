@@ -65,17 +65,17 @@ int main()
 	Image_Save_BMP(s, save);
 	input = getchar();
 
-	Image_Save_BMP(s, save);
+	wait_for_key(&input);
 	printf("--------------NETWORK XOR-----------------\n");
-	Image_Save_BMP(s, save);
+	wait_for_key(&input);
 	network();
 
-	Image_Save_BMP(s, save);
+	wait_for_key(&input);
 	printf("--------------RESOLVE-----------------\n");
-	Image_Save_BMP(s, save);
+	wait_for_key(&input);
 	resolve();
 
-	Image_Save_BMP(s, save);
+	wait_for_key(&input);
 	printf("\n");
 	printf("THANK YOU FOR LISTENING\n");
 	return 0;
