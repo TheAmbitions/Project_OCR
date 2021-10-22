@@ -6,6 +6,57 @@
 #include "SDL/SDL_image.h"
 #include "pixel_operations.h"
 
+
+SDL_Surface* drawLine(SDL_Surface* surf,int x1,int y1, int x2,int y2)  // Bresenham
+{
+        /*float x = (float)x1;
+    float end = (float)(x2)+0.001;8*/
+        Uint32 pixel = SDL_MapRGB(surf->format, 255, 0, 0);
+
+        if (x1> x2)
+        {
+                int temp = x1;
+                x1 = x2;
+                x2 = temp;
+                temp = y1;
+                y1 = y2;
+                y2 = temp;
+        }
+
+        else
+        {
+                if (x1 == x2)
+                {
+                        if (y1 < y2)
+                        {
+                                while ( y1 <= y2)
+                                {
+                                        put_pixel(surf,x1,y1, pixel);
+                                        y1 += 1;
+                                }
+                        }
+                        else
+                        {
+                                while ( y1 >= y2)
+                                {
+                                        put_pixel(surf,x1,y1, pixel);
+                                        y1 += -1;
+                                }
+                        }
+		}
+	}
+
+        float a = ((float)(y2-y1) / (float)(x2-x1));
+        while (x1 <= x2)
+        {
+                put_pixel(surf, x1,y1 + (int)((float)x1 * a),pixel);
+                x1 += 1;
+        }
+        return  surf;
+
+}
+
+
 void init_sdl()
 {
 	// Init only the video part.
