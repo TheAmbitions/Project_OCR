@@ -125,53 +125,63 @@ void PutPixel(SDL_Surface *surface, int x, int y, unsigned long pixel)
 	if (bpp==4)
 		*(unsigned long*)p = pixel;
 }
- 
+
 SDL_Surface* drawLine(SDL_Surface* surf,int x1,int y1, int x2,int y2)  // Bresenham
 {
-	/*float x = (float)x1;
+        /*float x = (float)x1;
     float end = (float)(x2)+0.001;8*/
-	Uint32 pixel = SDL_MapRGB(surf->format, 255, 0, 0);
-	
-       	if (x1> x2)
-       	{	
-       		int temp = x1;
-		x1 = x2;
-		x2 = temp;
-		temp = y1;
-		y1 = y2;
-		y2 = temp;
-       	}
-	
-	else
-	{
- 		if (x1 == x2)
-		{	
-			if (y1 < y2)
-			{
-				while ( y1 <= y2)
-				{	
-					put_pixel(surf,x1,y1, pixel);
-					y1 += 1;
-				}
-			}
-			else
-			{
-				while ( y1 >= y2)
-				{
-					put_pixel(surf,x1,y1, pixel);								                                
-					y1 += -1;
-				}
-			}
-		}	
-	}
+        long w = surf -> w;
+        long h = surf -> h;
+        Uint32 pixel = SDL_MapRGB(surf->format, 255, 0, 0);
 
-	float a = ((float)(y2-y1) / (float)(x2-x1));
-    	while (x1 <= x2)
-    	{
-        	put_pixel(surf, x1,y1 + (int)((float)x1 * a),pixel);
-        	x1 += 1;
-    	}	
-    	return  surf;
+        if (x1> x2)
+        {
+                int temp = x1;
+                x1 = x2;
+                x2 = temp;
+                temp = y1;
+                y1 = y2;
+                y2 = temp;
+        }
+
+        else
+        {
+                if (x1 == x2)
+                {
+                        if (y1 > y2)
+                        {
+                                int temp = y1;
+                                y1 = y2;
+                                y2 = temp;
+                                temp = x1;
+                                x1 = x2;
+                                x2 = temp;
+                        }
+                        while ( y1 <= y2 && y1 < h)
+                        {
+                                if (y1 > -1)
+                                        put_pixel(surf,x1,y1, pixel);
+                                y1 += 1;
+                        }
+
+                }
+        }
+
+        float a = ((float)(y2-y1) / (float)(x2-x1));
+        int y = y1;
+        while (x1 <= x2 && x1 < w)
+        {
+                y = y1 + (int)((float)x1 * a);
+                if (x1 > -1 && y > -1 && y < h)
+                {
+                    put_pixel(surf, x1,y,pixel);
+                }
+                x1 += 1;
+        }
+        return  surf;
+
+}
+
 
 }
 
