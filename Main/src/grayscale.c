@@ -18,11 +18,15 @@ SDL_Surface* Filter(SDL_Surface* source)
 
 	if( source->flags & SDL_SRCCOLORKEY )
 	{	
-		target = SDL_CreateRGBSurface( SDL_SWSURFACE, source->w ,source->h, source->format->BitsPerPixel, source->format->Rmask, source->format->Gmask, source->format->Bmask, 0 );
+		target = SDL_CreateRGBSurface( SDL_SWSURFACE, source->w ,source->h, 
+        source->format->BitsPerPixel, source->format->Rmask, 
+        source->format->Gmask, source->format->Bmask, 0 );
         }
     	else
         {
-        	target = SDL_CreateRGBSurface( SDL_SWSURFACE, source->w ,source->h, source->format->BitsPerPixel, source->format->Rmask, source->format->Gmask, source->format->Bmask, source->format->Amask );
+        	target = SDL_CreateRGBSurface( SDL_SWSURFACE, source->w ,source->h, 
+            source->format->BitsPerPixel, source->format->Rmask, 
+            source->format->Gmask, source->format->Bmask, source->format->Amask );
 	}
 
 	int w = source->w;
@@ -317,8 +321,6 @@ void grayscale(char filename[])
 	w = image_surface -> w;
 	h = image_surface -> h;
 	
-	long int total_pixels = w*h;
-	printf("%li",total_pixels);
 	Uint8 r, g, b, average;
  
 	for(int i = 0; i < w; i++)
@@ -333,7 +335,12 @@ void grayscale(char filename[])
 			put_pixel(image_surface,i,j,pixel);
 		}
   	}
- 
+    
+    update_surface(screen_surface, image_surface);
+	
+	wait_for_keypressed();
+	
+
 	image_surface = Filter(image_surface);
 	image_surface = Filter(image_surface);
 	
@@ -353,4 +360,5 @@ void grayscale(char filename[])
 	SDL_FreeSurface(image_surface);
 	// Free the screen surface.
 	SDL_FreeSurface(screen_surface);
+    SDL_Quit();
 }

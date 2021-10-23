@@ -2,7 +2,7 @@
 #include "output_sudoku.h"
 #include "brute_force.h"
 
-//je fais la déclaration ici parce que g la flemme de le faire dans autre fichier pour ce cas
+//je fais la d?claration ici parce que g la flemme de le faire dans autre fichier pour ce cas
 void print_grid(int grid[9][9]);
 
 void print_grid(int grid[9][9])
@@ -25,7 +25,7 @@ void resolve()
 	// Draw the grid before its resolution 
 	print_grid(grid);
 
-	//Résolution du sudoku
+	//R?solution du sudoku
 	// Resolve the grid
 	if (BruteSolve(grid, 0, 0) == 1)
 	{

@@ -1,5 +1,5 @@
-#ifndef SOBEL_H
-#define SOBEL_H
+#ifndef KERNEL_H
+#define KERNEL_H
 
 #include <stdio.h>
 #include <err.h>
@@ -8,8 +8,6 @@
 #include "pixel_operations.h"
 
 
-
-
-void apply_sobel(char path[]);
+void apply_kernel(char path[]);
 
 #endif

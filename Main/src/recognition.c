@@ -17,9 +17,7 @@ void recognition(char image[])
                 errx(3, "can't load %s: %s", image, IMG_GetError());
 
         // div: average of a width of one box
-        //int w = image_surface->w;
         int div = (image_surface->w / 9);
-        //int i = 0;
 
         SDL_Surface *img = NULL;
         SDL_Surface *surface = NULL;
@@ -31,14 +29,19 @@ void recognition(char image[])
         spriteSrc.x = 0;
         spriteSrc.y = 0;
 
+        int count = 0;
         for (int i = 0; i < 9; i++)
         {
                 for (int j = 0; j < 9; j++)
                 {
                         surface = SDL_CreateRGBSurface (0, div, div, 32, 0, 0, 0, 0);
                         SDL_BlitSurface(image_surface, &spriteSrc, surface, &spriteCoord);
-                        SDL_SaveBMP(surface, "image.bmp");
-                        display("image.bmp");
+                        SDL_SaveBMP(surface, "../data/image.bmp");
+                        if (count < 9)
+                        {
+                                display("../data/image.bmp");
+                                count++;
+                        }
                         spriteSrc.x += div;
                 }
 
@@ -49,4 +52,5 @@ void recognition(char image[])
         SDL_FreeSurface(img);
         SDL_FreeSurface(image_surface);
         SDL_FreeSurface(surface);
+        SDL_Quit();
 }

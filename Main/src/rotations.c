@@ -116,4 +116,5 @@ void apply_rotation(char filename[])
 
     //Free the screen surface
     SDL_FreeSurface (screen_surface);
+    SDL_Quit();
 }

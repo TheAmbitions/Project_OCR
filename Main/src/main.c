@@ -11,6 +11,7 @@
 #include "saveimage.h"
 #include "rotations.h"
 #include "sobel.h"
+#include "kernel.h"
 #include "recognition.h"
 
 void wait_for_key(char *input)
@@ -24,6 +25,7 @@ void wait_for_key(char *input)
 int main()
 {
 	char input = 0;
+    printf("\n");
 
 	printf("WELCOME TO THE AMBITIONS APPLICATION!\n");
 	printf("--------------------------------------\n");
@@ -43,22 +45,32 @@ int main()
 	wait_for_key(&input);
 	printf("--------------ROTATION-----------------\n");
 	wait_for_key(&input);
+    display(s);
 	apply_rotation(s);
 	input = getchar();
 	
 	wait_for_key(&input);
-	printf("--------------SOBEL-----------------\n");
+	printf("--------------KERNEL-----------------\n");
 	wait_for_key(&input);
-	apply_sobel(s);
+    display(s);
+	apply_kernel(s);
+    //apply_sobel(s);
 	
 	wait_for_key(&input);
 	printf("--------------RECOGNITION-----------------\n");
 	wait_for_key(&input);
-	recognition(s);
+    printf("Enter an image: ");
+	input = scanf("%[^\n]", s);
+	if (input == '\n')
+		errx(1, "Error: input not valid");
+	input = getchar();
 
+    display(s);
+	recognition(s);
+   
 	wait_for_key(&input);
 	printf("--------------SAVE IMAGE-----------------\n");
-	printf("Enter the name of the image you want to save (.bmp):");
+	printf("Enter the name of the image you want to save (.bmp): ");
 	char save[80];
 	input = scanf("%[^\n]", save);
 	if (input == '\n')
@@ -71,6 +83,7 @@ int main()
 	wait_for_key(&input);
 	network();
 
+    input = getchar();
 	wait_for_key(&input);
 	printf("--------------RESOLVE-----------------\n");
 	wait_for_key(&input);

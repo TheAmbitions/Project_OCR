@@ -66,7 +66,7 @@ SDL_Surface* sobel (SDL_Surface* image_surface)
     return destination;
 }
 
-int apply_sobel()
+void apply_sobel(char path[])
 {
     SDL_Surface* image_surface;
     SDL_Surface* screen_surface;
@@ -74,7 +74,7 @@ int apply_sobel()
    //Init SDL
     init_sdl();
 
-    image_surface = load_image("image_01.jpeg");
+    image_surface = load_image(path);
 
     image_surface = sobel (image_surface);
 
@@ -89,6 +89,5 @@ int apply_sobel()
 
     //Free the screen surface
     SDL_FreeSurface (screen_surface);
-
-    return 0;
+    SDL_Quit();
 }
