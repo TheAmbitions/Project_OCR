@@ -18,7 +18,7 @@ void create_values(size_t line1, size_t line2, size_t col2, double m1[line2], do
 		}
 }
 
-void feedforward(Network *net, double input[net->inputsize], double output[net->outputsize])
+void feedforward(Network *net, double input[], double output[])
 {
 	//input layer to hidden layer
 	create_values(1, net->inputsize, net->hiddensize, input, net->w1, net->b1, net->values);

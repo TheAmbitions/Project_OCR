@@ -18,7 +18,7 @@ void adjust_weights(size_t line, size_t col, double m1[line], double m2[col], do
 //x -> input array
 //o -> ouptput array
 //y -> expected array
-void backward(Network *net, double x[net->inputsize], double o[net->outputsize], double y[net->outputsize])
+void backward(Network *net, double x[], double o[], double y[])
 {
 	//update errors of the output layer
 	size_t i;

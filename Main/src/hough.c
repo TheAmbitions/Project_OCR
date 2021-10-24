@@ -369,17 +369,6 @@ int main(int argc,char *argv[])
 	
 	#define filename argv[1]
 	
-	/*float seuil;
-	printf("enter threshold \n");
-	
-	if (scanf("%f", &seuil) < 0) {
-	    printf("you want a positive seuil.\n");
-	    return 1;
-	} */
-	
-	
-	
-	
 	SDL_Surface* image_surface;
 	SDL_Surface* screen_surface;
 
@@ -388,13 +377,6 @@ int main(int argc,char *argv[])
 
 	image_surface = load_image(filename);
     SDL_Surface*  image_traite = image_surface;
-
-	// Display the image.
-	/*screen_surface = display_image(image_surface);
-
-	// Wait for a key to be pressed.
-	wait_for_keypressed();
-	*/
 	
 	Uint32 pixel;
 	int w;
@@ -419,28 +401,8 @@ int main(int argc,char *argv[])
 			put_pixel(image_surface,i,j,pixel);
 		}
   	}
- 
- /*	update_surface(screen_surface, image_surface);
- 	wait_for_keypressed();*/
  	
 	image_traite = Filter(image_surface);
-		
-	
-	//update_surface(screen_surface, image_surface);
-	//update_surface(screen_surface, image_surface);
-	
-	//wait_for_keypressed();
-	
-	/*otsu(image_surface,seuil);
-	
-	
-	
-	
-	
-	update_surface(screen_surface, image_surface);
-	//update_surface(screen_surface, image_surface);
-	
-	wait_for_keypressed();*/
 	
 	//image_surface = sobel(image_surface);
 	image_traite = kernel(image_traite);

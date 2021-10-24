@@ -7,12 +7,6 @@
 #define HIDDENSIZE 4
 #define OUTPUTSIZE 1
 
-typedef struct Hidden
-{
-	size_t size;
-	double values[1][10];
-} Hidden;
-
 typedef struct Network
 {
 	size_t inputsize;

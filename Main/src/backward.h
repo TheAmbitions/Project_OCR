@@ -3,6 +3,6 @@
 
 #include "network.h"
 
-void backward(Network *net, double x[net->inputsize], double o[net->outputsize], double y[net->outputsize]);
+void backward(Network *net, double x[], double o[], double y[]);
 
 #endif
