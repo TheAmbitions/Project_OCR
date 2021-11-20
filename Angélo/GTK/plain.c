@@ -115,10 +115,10 @@ gboolean Automatic(GtkWidget *widget, gpointer user_data)
 		
 		gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(game->ui.Manual),FALSE);
 		
-		gtk_widget_set_sensitive (GTK_WIDGET(game->ui.Rotation),TRUE);
-		gtk_widget_set_sensitive (GTK_WIDGET(game->ui.Noise),TRUE);
-		gtk_widget_set_sensitive (GTK_WIDGET(game->ui.BW),TRUE);
-		gtk_widget_set_sensitive (GTK_WIDGET(game->ui.Grid),TRUE);
+		gtk_widget_set_sensitive (GTK_WIDGET(game->ui.Rotation),FALSE);
+		gtk_widget_set_sensitive (GTK_WIDGET(game->ui.Noise),FALSE);
+		gtk_widget_set_sensitive (GTK_WIDGET(game->ui.BW),FALSE);
+		gtk_widget_set_sensitive (GTK_WIDGET(game->ui.Grid),FALSE);
 		g_print("AUTO \n");
 		return 0;
 	}
@@ -147,10 +147,10 @@ gboolean Manu(GtkWidget *widget, gpointer user_data)
 		gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(game->ui.Auto),FALSE);
 			
 				
-		gtk_widget_set_sensitive (GTK_WIDGET(game->ui.Rotation),FALSE);
-		gtk_widget_set_sensitive (GTK_WIDGET(game->ui.Noise),FALSE);
-		gtk_widget_set_sensitive (GTK_WIDGET(game->ui.BW),FALSE);
-		gtk_widget_set_sensitive (GTK_WIDGET(game->ui.Grid),FALSE);
+		gtk_widget_set_sensitive (GTK_WIDGET(game->ui.Rotation),TRUE);
+		gtk_widget_set_sensitive (GTK_WIDGET(game->ui.Noise),TRUE);
+		gtk_widget_set_sensitive (GTK_WIDGET(game->ui.BW),TRUE);
+		gtk_widget_set_sensitive (GTK_WIDGET(game->ui.Grid),TRUE);
 		
 		g_print("MANU \n");
 		return 0;
@@ -301,7 +301,13 @@ int main (int argc, char *argv[])
     };
 
 	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(Auto),TRUE);
+	
 	Auto = GTK_CHECK_BUTTON(gtk_builder_get_object(builder, "Auto"));
+	
+	gtk_widget_set_sensitive (GTK_WIDGET(Rotation),FALSE);
+	gtk_widget_set_sensitive (GTK_WIDGET(Noise),FALSE);
+	gtk_widget_set_sensitive (GTK_WIDGET(BW),FALSE);
+	gtk_widget_set_sensitive (GTK_WIDGET(Grid),FALSE);
 
     // Connects event handlers.
     g_signal_connect(stop_button, "clicked", G_CALLBACK(on_stop), &game);
@@ -316,6 +322,8 @@ int main (int argc, char *argv[])
 	g_signal_connect(Noise, "clicked", G_CALLBACK(NoiseReduc), &game);
 	g_signal_connect(BW, "clicked", G_CALLBACK(BlackWhite), &game);
 	g_signal_connect(Grid, "clicked", G_CALLBACK(GridDetec), &game);
+	
+	
 	
 
  
