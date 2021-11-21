@@ -138,7 +138,7 @@ int main (int argc, char *argv[])
 
     gtk_widget_set_sensitive(GTK_WIDGET(Rotation), FALSE);
     gtk_widget_set_sensitive(GTK_WIDGET(Noise), FALSE);
-    gtk_widget_set_sensitive(GTK_WIDGET(BW), FALSE);
+    gtk_widget_set_sensitive(GTK_WIDGET(bw), FALSE);
     gtk_widget_set_sensitive(GTK_WIDGET(Grid), FALSE);
 
     App app =
