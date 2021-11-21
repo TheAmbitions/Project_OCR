@@ -133,7 +133,13 @@ int main (int argc, char *argv[])
     GtkCheckButton* bw = GTK_CHECK_BUTTON(gtk_builder_get_object(builder, "bw"));
     GtkCheckButton* Grid = GTK_CHECK_BUTTON(gtk_builder_get_object(builder, "Grid"));
 
-    
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(Auto), TRUE);
+    Auto = GTK_CHECK_BUTTON(gtk_builder_get_object(builder, "Auto"));
+
+    gtk_widget_set_sensitive(GTK_WIDGET(Rotation), FALSE);
+    gtk_widget_set_sensitive(GTK_WIDGET(Noise), FALSE);
+    gtk_widget_set_sensitive(GTK_WIDGET(BW), FALSE);
+    gtk_widget_set_sensitive(GTK_WIDGET(Grid), FALSE);
 
     App app =
     {
