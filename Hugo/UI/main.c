@@ -104,6 +104,63 @@ gboolean value_changed(GtkWidget* widget, gpointer user_data)
     return 0;
 }
 
+gboolean NoiseReduc(GtkWidget* widget, gpointer user_data)
+{
+    App* app = user_data;
+
+    if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(app->ui.Noise)) == TRUE)
+    {
+        g_print("Noise \n");
+        return 0;
+    }
+
+    if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(app->ui.Noise)) == FALSE)
+    {
+        g_print("Not Noise \n");
+        return 0;
+    }
+
+    return 0;
+}
+
+gboolean BlackWhite(GtkWidget* widget, gpointer user_data)
+{
+    App* app = user_data;
+
+    if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(app->ui.BW)) == TRUE)
+    {
+        g_print("BW \n");
+        return 0;
+    }
+
+    if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(app->ui.BW)) == FALSE)
+    {
+        g_print("Not BW \n");
+        return 0;
+    }
+
+    return 0;
+}
+
+gboolean GridDetec(GtkWidget* widget, gpointer user_data)
+{
+    App* app = user_data;
+
+    if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(app->ui.Grid)) == TRUE)
+    {
+        g_print("Grid \n");
+        return 0;
+    }
+
+    if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(app->ui.Noise)) == FALSE)
+    {
+        g_print("Not Grid \n");
+        return 0;
+    }
+
+    return 0;
+}
+
 int main (int argc, char *argv[])
 {
     // Initializes GTK.
@@ -133,14 +190,6 @@ int main (int argc, char *argv[])
     GtkCheckButton* bw = GTK_CHECK_BUTTON(gtk_builder_get_object(builder, "bw"));
     GtkCheckButton* Grid = GTK_CHECK_BUTTON(gtk_builder_get_object(builder, "Grid"));
 
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(Auto), TRUE);
-    Auto = GTK_CHECK_BUTTON(gtk_builder_get_object(builder, "Auto"));
-
-    gtk_widget_set_sensitive(GTK_WIDGET(Rotation), FALSE);
-    gtk_widget_set_sensitive(GTK_WIDGET(Noise), FALSE);
-    gtk_widget_set_sensitive(GTK_WIDGET(bw), FALSE);
-    gtk_widget_set_sensitive(GTK_WIDGET(Grid), FALSE);
-
     App app =
     {
         .ui =
@@ -159,6 +208,15 @@ int main (int argc, char *argv[])
         }
     };
 
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(Auto), TRUE);
+
+    Auto = GTK_CHECK_BUTTON(gtk_builder_get_object(builder, "Auto"));
+
+    gtk_widget_set_sensitive(GTK_WIDGET(Rotation), FALSE);
+    gtk_widget_set_sensitive(GTK_WIDGET(Noise), FALSE);
+    gtk_widget_set_sensitive(GTK_WIDGET(bw), FALSE);
+    gtk_widget_set_sensitive(GTK_WIDGET(Grid), FALSE);
+
     // Connects signal handlers.
     g_signal_connect(window, "destroy", G_CALLBACK(gtk_main_quit), NULL);
     g_signal_connect(load, "clicked", G_CALLBACK(on_load), &app);
@@ -168,6 +226,9 @@ int main (int argc, char *argv[])
     g_signal_connect(Manual, "clicked", G_CALLBACK(Manu), &app);
     g_signal_connect(Auto, "clicked", G_CALLBACK(Automatic), &app);
     g_signal_connect(Rotation, "value-changed", G_CALLBACK(value_changed), &app);
+    g_signal_connect(Noise, "clicked", G_CALLBACK(NoiseReduc), &app);
+    g_signal_connect(bw, "clicked", G_CALLBACK(BlackWhite), &app);
+    g_signal_connect(Grid, "clicked", G_CALLBACK(GridDetec), &app);
 
     // Runs the main loop.
     gtk_main();
