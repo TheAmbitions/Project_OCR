@@ -3,6 +3,7 @@
 #include <err.h>
 #include "SDL/SDL.h"
 #include "SDL/SDL_image.h"
+#include "SDL/SDL_rotozoom.h"
 #include <gtk/gtk.h>
 
 #include "display.h"
@@ -22,15 +23,29 @@ typedef struct UserInterface
     GtkCheckButton *Grid;
 }UserInterface;
 
+typedef struct Image
+{
+    GtkImage *img;
+}Image;
+
 typedef struct Application
 {
     gchar* filename;
 
     SDL_Surface* image_surface;
-    SDL_Surface* screen_surface;
 
+    Image image;
     UserInterface ui;
 }App;
+
+SDL_Surface* resize(SDL_Surface *img)
+{
+    while (img->w > 740 || img->h > 700)
+    {
+        img = rotozoomSurface(img, 0, 0.9, 0);
+    }
+    return img;
+}
 
 void openfile(GtkButton *button, gpointer user_data)
 {
@@ -61,10 +76,15 @@ void openfile(GtkButton *button, gpointer user_data)
         break;
     }
     gtk_widget_destroy(dialog);
-    
+
     app->image_surface = load_image(app->filename);
-    app->screen_surface = display_image(app->image_surface);
-    wait_for_keypressed();
+    //g_print("Weight = %i\n", app->image_surface->w);
+    //g_print("Height = %i\n", app->image_surface->h);
+    app->image_surface = resize(app->image_surface);
+    SDL_SaveBMP(app->image_surface, "test.bmp");
+    //g_print("Weight = %i\n", app->image_surface->w);
+    //g_print("Height = %i\n", app->image_surface->h);
+    gtk_image_set_from_file(app->image.img, "test.bmp");
 }
 
 void on_save(GtkButton *button, gpointer user_data)
@@ -235,12 +255,13 @@ int main (int argc, char *argv[])
     GtkCheckButton* Noise = GTK_CHECK_BUTTON(gtk_builder_get_object(builder, "Noise"));
     GtkCheckButton* bw = GTK_CHECK_BUTTON(gtk_builder_get_object(builder, "bw"));
     GtkCheckButton* Grid = GTK_CHECK_BUTTON(gtk_builder_get_object(builder, "Grid"));
+    GtkImage *img = GTK_IMAGE(gtk_builder_get_object(builder, "img_sud"));
 
     App app =
     {
         .filename = "",
         .image_surface = NULL,
-        .screen_surface = NULL,
+        .image = { .img = img },
         .ui =
         {
             .window = window,
@@ -281,6 +302,8 @@ int main (int argc, char *argv[])
 
     // Runs the main loop.
     gtk_main();
+
+    SDL_FreeSurface(app.image_surface);
 
     // Exits.
     return 0;
