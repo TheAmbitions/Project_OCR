@@ -17,17 +17,45 @@ typedef struct UserInterface
 
 typedef struct Application
 {
+    gchar* filename;
     UserInterface ui;
 }App;
 
-void on_load(GtkButton *button, gpointer user_data)
+void on_load(GtkButton *button, GtkLabel* text_label)
 {
     g_print("load\n");
+    GtkWidget* label = (GtkWidget*)text_label;
+    GtkWidget* toplevel = gtk_widget_get_toplevel(GTK_WIDGET(button));
+    GtkFileFilter *filter = gtk_file_filter_new ();
+    GtkWidget* dialog = gtk_file_chooser_dialog_new(("Open image"),
+        GTK_WINDOW(toplevel),
+        GTK_FILE_CHOOSER_ACTION_OPEN,
+        "Open", GTK_RESPONSE_ACCEPT,
+        "Cancel", GTK_RESPONSE_CANCEL,
+        NULL);
+
+    gtk_file_filter_add_pixbuf_formats (filter);
+    gtk_file_chooser_add_filter (GTK_FILE_CHOOSER (dialog),filter);
+
+    switch (gtk_dialog_run(GTK_DIALOG(dialog)))
+    {
+    case GTK_RESPONSE_ACCEPT:
+    {
+        filename = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
+        gtk_label_set_text(GTK_LABEL(label), filename);
+        break;
+    }
+    default:
+        break;
+    }
+    gtk_widget_destroy(dialog);
 }
 
 void on_save(GtkButton *button, gpointer user_data)
 {
+    App* app = user_data;
     g_print("save\n");
+    g_print("%s\n", app->filename);
 }
 
 void on_resolve(GtkButton *button, gpointer user_data)
@@ -191,6 +219,8 @@ int main (int argc, char *argv[])
 
     App app =
     {
+        .filename = "",
+
         .ui =
         {
             .window = window,
@@ -218,7 +248,7 @@ int main (int argc, char *argv[])
 
     // Connects signal handlers.
     g_signal_connect(window, "destroy", G_CALLBACK(gtk_main_quit), NULL);
-    g_signal_connect(load, "clicked", G_CALLBACK(on_load), &app);
+    g_signal_connect(load, "clicked", G_CALLBACK(on_load), NULL);
     g_signal_connect(save, "clicked", G_CALLBACK(on_save), &app);
     g_signal_connect(resolve, "clicked", G_CALLBACK(on_resolve), &app);
     g_signal_connect(network, "clicked", G_CALLBACK(on_network), &app);
