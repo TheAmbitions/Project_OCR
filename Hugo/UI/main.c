@@ -21,10 +21,13 @@ typedef struct Application
     UserInterface ui;
 }App;
 
-void on_load(GtkButton *button, GtkLabel* text_label)
+void openfile(GtkButton *button, gpointer user_data)
 {
     g_print("load\n");
-    GtkWidget* label = (GtkWidget*)text_label;
+
+    App* app = user_data;
+
+    //GtkWidget* label = (GtkWidget*)text_label;
     GtkWidget* toplevel = gtk_widget_get_toplevel(GTK_WIDGET(button));
     GtkFileFilter *filter = gtk_file_filter_new ();
     GtkWidget* dialog = gtk_file_chooser_dialog_new(("Open image"),
@@ -41,8 +44,8 @@ void on_load(GtkButton *button, GtkLabel* text_label)
     {
     case GTK_RESPONSE_ACCEPT:
     {
-        filename = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
-        gtk_label_set_text(GTK_LABEL(label), filename);
+        app->filename = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
+        //gtk_label_set_text(GTK_LABEL(label), filename);
         break;
     }
     default:
@@ -248,7 +251,7 @@ int main (int argc, char *argv[])
 
     // Connects signal handlers.
     g_signal_connect(window, "destroy", G_CALLBACK(gtk_main_quit), NULL);
-    g_signal_connect(load, "clicked", G_CALLBACK(on_load), NULL);
+    g_signal_connect(load, "clicked", G_CALLBACK(openfile), &app);
     g_signal_connect(save, "clicked", G_CALLBACK(on_save), &app);
     g_signal_connect(resolve, "clicked", G_CALLBACK(on_resolve), &app);
     g_signal_connect(network, "clicked", G_CALLBACK(on_network), &app);
