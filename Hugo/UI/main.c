@@ -96,7 +96,6 @@ gboolean Manu(GtkWidget* widget, gpointer user_data)
     return 0;
 }
 
-
 gboolean value_changed(GtkWidget* widget, gpointer user_data)
 {
     App *app = user_data;
@@ -127,13 +126,13 @@ gboolean BlackWhite(GtkWidget* widget, gpointer user_data)
 {
     App* app = user_data;
 
-    if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(app->ui.BW)) == TRUE)
+    if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(app->ui.bw)) == TRUE)
     {
         g_print("BW \n");
         return 0;
     }
 
-    if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(app->ui.BW)) == FALSE)
+    if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(app->ui.bw)) == FALSE)
     {
         g_print("Not BW \n");
         return 0;
