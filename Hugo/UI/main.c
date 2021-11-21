@@ -7,13 +7,18 @@ typedef struct UserInterface
     GtkButton *save;
     GtkButton *resolve;
     GtkButton *network;
-    GtkSpinButton *rotation;
-    GtkCheckButton *autom;
-    GtkCheckButton *manual;
-    GtkCheckButton *noise;
+    GtkSpinButton *Rotation;
+    GtkCheckButton *Auto;
+    GtkCheckButton *Manual;
+    GtkCheckButton *Noise;
     GtkCheckButton *bw;
-    GtkCheckButton *grid;
-}Ui;
+    GtkCheckButton *Grid;
+}UserInterface;
+
+typedef struct Application
+{
+    UserInterface ui;
+}App;
 
 void on_load(GtkButton *button, gpointer user_data)
 {
@@ -37,24 +42,24 @@ void on_network(GtkButton *button, gpointer user_data)
 
 gboolean Automatic(GtkWidget* widget, gpointer user_data)
 {
-    Ui *ui = user_data;
+    App *app = user_data;
 
-    if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(ui->manual)) == FALSE)
+    if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(app->ui.Manual)) == FALSE)
     {
-        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(ui->autom), TRUE);
+        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(app->ui.Auto), TRUE);
         return 0;
     }
 
 
-    if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(ui->autom)) == TRUE)
+    if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(app->ui.Auto)) == TRUE)
     {
 
-        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(ui->manual), FALSE);
+        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(app->ui.Manual), FALSE);
 
-        gtk_widget_set_sensitive(GTK_WIDGET(ui->rotation), FALSE);
-        gtk_widget_set_sensitive(GTK_WIDGET(ui->noise), FALSE);
-        gtk_widget_set_sensitive(GTK_WIDGET(ui->bw), FALSE);
-        gtk_widget_set_sensitive(GTK_WIDGET(ui->grid), FALSE);
+        gtk_widget_set_sensitive(GTK_WIDGET(app->ui.Rotation), FALSE);
+        gtk_widget_set_sensitive(GTK_WIDGET(app->ui.Noise), FALSE);
+        gtk_widget_set_sensitive(GTK_WIDGET(app->ui.bw), FALSE);
+        gtk_widget_set_sensitive(GTK_WIDGET(app->ui.Grid), FALSE);
 
         g_print("AUTO \n");
         return 0;
@@ -64,25 +69,25 @@ gboolean Automatic(GtkWidget* widget, gpointer user_data)
 
 gboolean Manu(GtkWidget* widget, gpointer user_data)
 {
-    Ui* ui = user_data;
+    App *app = user_data;
 
-    if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(ui->autom)) == FALSE)
+    if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(app->ui.Auto)) == FALSE)
     {
-        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(ui->manual), TRUE);
+        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(app->ui.Manual), TRUE);
         return 0;
     }
 
-    if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(ui->manual)) == TRUE)
+    if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(app->ui.Manual)) == TRUE)
     {
 
 
-        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(ui->autom), FALSE);
+        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(app->ui.Auto), FALSE);
 
 
-        gtk_widget_set_sensitive(GTK_WIDGET(ui->rotation), TRUE);
-        gtk_widget_set_sensitive(GTK_WIDGET(ui->noise), TRUE);
-        gtk_widget_set_sensitive(GTK_WIDGET(ui->bw), TRUE);
-        gtk_widget_set_sensitive(GTK_WIDGET(ui->grid), TRUE);
+        gtk_widget_set_sensitive(GTK_WIDGET(app->ui.Rotation), TRUE);
+        gtk_widget_set_sensitive(GTK_WIDGET(app->ui.Noise), TRUE);
+        gtk_widget_set_sensitive(GTK_WIDGET(app->ui.bw), TRUE);
+        gtk_widget_set_sensitive(GTK_WIDGET(app->ui.Grid), TRUE);
 
         g_print("MANU \n");
         return 0;
@@ -94,8 +99,8 @@ gboolean Manu(GtkWidget* widget, gpointer user_data)
 
 gboolean value_changed(GtkWidget* widget, gpointer user_data)
 {
-    Ui* ui = user_data;
-    g_print("%i\n", gtk_spin_button_get_value_as_int(GTK_SPIN_BUTTON(ui->srotation)));
+    App *app = user_data;
+    g_print("%i\n", gtk_spin_button_get_value_as_int(GTK_SPIN_BUTTON(app->ui.Rotation)));
     return 0;
 }
 
@@ -121,37 +126,42 @@ int main (int argc, char *argv[])
     GtkButton* save = GTK_BUTTON(gtk_builder_get_object(builder, "save"));
     GtkButton* resolve = GTK_BUTTON(gtk_builder_get_object(builder, "resolve"));
     GtkButton* network = GTK_BUTTON(gtk_builder_get_object(builder, "network"));
-    GtkCheckButton* autom = GTK_CHECK_BUTTON(gtk_builder_get_object(builder, "auto"));
-    GtkCheckButton* manual = GTK_CHECK_BUTTON(gtk_builder_get_object(builder, "manual"));
-    GtkSpinButton* rotation = GTK_SPIN_BUTTON(gtk_builder_get_object(builder, "rotation"));
-    GtkCheckButton* noise = GTK_CHECK_BUTTON(gtk_builder_get_object(builder, "niose"));
+    GtkCheckButton* Auto = GTK_CHECK_BUTTON(gtk_builder_get_object(builder, "Auto"));
+    GtkCheckButton* Manual = GTK_CHECK_BUTTON(gtk_builder_get_object(builder, "Manual"));
+    GtkSpinButton* Rotation = GTK_SPIN_BUTTON(gtk_builder_get_object(builder, "Rotation"));
+    GtkCheckButton* Noise = GTK_CHECK_BUTTON(gtk_builder_get_object(builder, "Noise"));
     GtkCheckButton* bw = GTK_CHECK_BUTTON(gtk_builder_get_object(builder, "bw"));
-    GtkCheckButton* grid = GTK_CHECK_BUTTON(gtk_builder_get_object(builder, "grid"));
+    GtkCheckButton* Grid = GTK_CHECK_BUTTON(gtk_builder_get_object(builder, "Grid"));
 
-    Ui ui =
+    
+
+    App app =
     {
-        .window = window,
-        .load = load,
-        .save = save,
-        .resolve = resolve,
-        .network = network,
-        .rotation = rotation,
-        .autom = autom,
-        .manual = manual,
-        .noise = noise,
-        .bw = bw,
-        .grid = grid
+        .ui =
+        {
+            .window = window,
+            .load = load,
+            .save = save,
+            .resolve = resolve,
+            .network = network,
+            .Rotation = Rotation,
+            .Auto = Auto,
+            .Manual = Manual,
+            .Noise = Noise,
+            .bw = bw,
+            .Grid = Grid
+        }
     };
 
     // Connects signal handlers.
     g_signal_connect(window, "destroy", G_CALLBACK(gtk_main_quit), NULL);
-    g_signal_connect(load, "clicked", G_CALLBACK(on_load), &ui);
-    g_signal_connect(save, "clicked", G_CALLBACK(on_save), &ui);
-    g_signal_connect(resolve, "clicked", G_CALLBACK(on_resolve), &ui);
-    g_signal_connect(network, "clicked", G_CALLBACK(on_network), &ui);
-    g_signal_connect(Manual, "clicked", G_CALLBACK(Manu), &ui);
-    g_signal_connect(Auto, "clicked", G_CALLBACK(Automatic), &ui);
-    g_signal_connect(Rotation, "value-changed", G_CALLBACK(value_changed), &ui);
+    g_signal_connect(load, "clicked", G_CALLBACK(on_load), &app);
+    g_signal_connect(save, "clicked", G_CALLBACK(on_save), &app);
+    g_signal_connect(resolve, "clicked", G_CALLBACK(on_resolve), &app);
+    g_signal_connect(network, "clicked", G_CALLBACK(on_network), &app);
+    g_signal_connect(Manual, "clicked", G_CALLBACK(Manu), &app);
+    g_signal_connect(Auto, "clicked", G_CALLBACK(Automatic), &app);
+    g_signal_connect(Rotation, "value-changed", G_CALLBACK(value_changed), &app);
 
     // Runs the main loop.
     gtk_main();
