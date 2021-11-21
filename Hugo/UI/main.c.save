@@ -7,7 +7,6 @@
 #include <gtk/gtk.h>
 
 #include "display.h"
-#include "rotations.h"
 
 typedef struct UserInterface
 {
@@ -34,19 +33,19 @@ typedef struct Application
     gchar* filename;
 
     SDL_Surface* image_surface;
-    SDL_Surface* dis_img;
 
     Image image;
     UserInterface ui;
 }App;
 
-SDL_Surface* resize(SDL_Surface *img)
+void resize(App* app)
 {
-    while (img->w > 740 || img->h > 700)
+    // hauteur 700
+    // largeur 740
+    while (app->image.w > 740 || image->h > 700)
     {
-        img = rotozoomSurface(img, 0, 0.9, 0);
+        image = rotozoomSurface(image, 1.0, 0.2, 0);
     }
-    return img;
 }
 
 void openfile(GtkButton *button, gpointer user_data)
@@ -80,14 +79,8 @@ void openfile(GtkButton *button, gpointer user_data)
     gtk_widget_destroy(dialog);
 
     app->image_surface = load_image(app->filename);
-    app->dis_img = load_image(app->filename);
-    //g_print("Weight = %i\n", app->image_surface->w);
-    //g_print("Height = %i\n", app->image_surface->h);
-    app->dis_img = resize(app->dis_img);
-    SDL_SaveBMP(app->dis_img, "display.bmp");
-    //g_print("Weight = %i\n", app->image_surface->w);
-    //g_print("Height = %i\n", app->image_surface->h);
-    gtk_image_set_from_file(app->image.img, "display.bmp");
+    resize(app->image_surface);
+    gtk_image_set_from_file(app->image.img, app->filename);
 }
 
 void on_save(GtkButton *button, gpointer user_data)
@@ -166,10 +159,7 @@ gboolean Manu(GtkWidget* widget, gpointer user_data)
 gboolean value_changed(GtkWidget* widget, gpointer user_data)
 {
     App *app = user_data;
-    apply_rotation(&(app->dis_img),
-        gtk_spin_button_get_value_as_int(GTK_SPIN_BUTTON(app->ui.Rotation)));
-    SDL_SaveBMP(app->dis_img, "display.bmp");
-    gtk_image_set_from_file(app->image.img, "display.bmp");
+    g_print("%i\n", gtk_spin_button_get_value_as_int(GTK_SPIN_BUTTON(app->ui.Rotation)));
     return 0;
 }
 
@@ -267,7 +257,6 @@ int main (int argc, char *argv[])
     {
         .filename = "",
         .image_surface = NULL,
-        .dis_img = NULL,
         .image = { .img = img },
         .ui =
         {
@@ -311,7 +300,6 @@ int main (int argc, char *argv[])
     gtk_main();
 
     SDL_FreeSurface(app.image_surface);
-    SDL_FreeSurface(app.dis_img);
 
     // Exits.
     return 0;

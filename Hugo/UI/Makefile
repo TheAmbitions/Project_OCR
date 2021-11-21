@@ -10,7 +10,7 @@ EXE = main
 
 all: $(EXE)
 
-main: display.o
+main: display.o rotations.o pixel_operations.o
 
 $(foreach f, $(EXE), $(eval $(f):))
 
