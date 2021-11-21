@@ -1,4 +1,11 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <err.h>
+#include "SDL/SDL.h"
+#include "SDL/SDL_image.h"
 #include <gtk/gtk.h>
+
+#include "display.h"
 
 typedef struct UserInterface
 {
@@ -18,6 +25,10 @@ typedef struct UserInterface
 typedef struct Application
 {
     gchar* filename;
+
+    SDL_Surface* image_surface;
+    SDL_Surface* screen_surface;
+
     UserInterface ui;
 }App;
 
@@ -27,7 +38,6 @@ void openfile(GtkButton *button, gpointer user_data)
 
     App* app = user_data;
 
-    //GtkWidget* label = (GtkWidget*)text_label;
     GtkWidget* toplevel = gtk_widget_get_toplevel(GTK_WIDGET(button));
     GtkFileFilter *filter = gtk_file_filter_new ();
     GtkWidget* dialog = gtk_file_chooser_dialog_new(("Open image"),
@@ -45,13 +55,16 @@ void openfile(GtkButton *button, gpointer user_data)
     case GTK_RESPONSE_ACCEPT:
     {
         app->filename = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
-        //gtk_label_set_text(GTK_LABEL(label), filename);
         break;
     }
     default:
         break;
     }
     gtk_widget_destroy(dialog);
+    
+    app->image_surface = load_image(app->filename);
+    app->screen_surface = display_image(app->image_surface);
+    wait_for_keypressed();
 }
 
 void on_save(GtkButton *button, gpointer user_data)
@@ -196,6 +209,9 @@ int main (int argc, char *argv[])
     // Initializes GTK.
     gtk_init(NULL, NULL);
 
+    // Initializes SDL
+    init_sdl();
+
     // Loads the UI description and builds the UI.
     // (Exits if an error occurs.)
     GtkBuilder* builder = gtk_builder_new();
@@ -223,7 +239,8 @@ int main (int argc, char *argv[])
     App app =
     {
         .filename = "",
-
+        .image_surface = NULL,
+        .screen_surface = NULL,
         .ui =
         {
             .window = window,
