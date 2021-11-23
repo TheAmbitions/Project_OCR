@@ -22,7 +22,6 @@ void print_arr(int* arr, size_t line, size_t cols)
 typedef struct Network
 {
 	int* input;
-	int* test;
 }Network;
 
 void training(Network *net, char *path, int expected)
@@ -41,11 +40,9 @@ void training(Network *net, char *path, int expected)
 			p = get_pixel(image_surface, j, i);
 			SDL_GetRGB(p, image_surface->format, &r, &g, &b);
 			if ((r + g + b) / 3 > 127)
-				*(net->test) = *(net->test) + 1;
-			/*if ((r + g + b) / 3 > 127)
-				net->(*(input + (i * height + j))) = 0;
+				*(net->input + (i * height + j)) = 0;
 			else
-				net->(*(input + (i * height + j))) = 1;*/
+				*(net->input + (i * height + j)) = 1;
 		}
 	}
 
@@ -54,13 +51,11 @@ void training(Network *net, char *path, int expected)
 
 int main()
 {
-	int a = 0;
 	Network network =
 	{
 		.input = calloc(SIZE, sizeof(int)),
-		.test = &a,
 	};
 
-	training(&network, "img/1.png", 1);
+	training(&network, "1.png", 1);
 	print_arr(network.input, LINE, LINE);
 }
