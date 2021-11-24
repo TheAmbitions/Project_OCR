@@ -256,8 +256,8 @@ SDL_Surface* kernel (SDL_Surface* image_surface)
 
 struct list {
     struct  list    *next;
-    int             rho;
-    int             theta;
+    double             rho;
+    double             theta;
 };
 
 struct  list *empty_list() {return NULL; }
@@ -266,7 +266,7 @@ int list_is_empty(struct list *l){
     return l== NULL;
 }
 
-struct list *add(struct list *l, int x, int y){
+struct list *add(struct list *l, double x, double y){
     struct list     *tmp;
     tmp = malloc(sizeof(struct list))
     tmp->rho = x;
@@ -296,6 +296,19 @@ void list_remove(struct list **list, struct list *elm)
 
 
 #define PI 3.1415927
+
+SDL_Surface* detection(struct list l,int len)
+{
+    struct l_x,l_y;
+    int len_x = 0;
+    int len_y = 0;
+    double m_th1, m_rh1, m_th2,m_rh2; 
+    while (l != 0)
+    {
+        m_th = l->theta /500
+    }
+
+}
 
 void SDL_ExitWithError(const char *message);
 
@@ -358,9 +371,10 @@ SDL_Surface* hough(SDL_Surface* img, SDL_Surface* dest)
 
         }
     }
-    
-    double lignes[nb*2];
+ 
     int i = 0;
+
+    struct list *lignes = empty_list()
 
     for (double i_theta = 0; i_theta < Ntheta; i_theta++)
     {
@@ -368,8 +382,7 @@ SDL_Surface* hough(SDL_Surface* img, SDL_Surface* dest)
         {
             if (accum_seuil[(int)(i_theta* width +i_rho)] !=0)
             {
-                lignes[i * 2] = i_rho * drho;
-                lignes[i *2 +1] = i_theta * dtheta;
+                lignes = add(lignes, i_rho * drho, i_theta * dtheta);
                 i = i + 1;
             }
         }
@@ -377,12 +390,11 @@ SDL_Surface* hough(SDL_Surface* img, SDL_Surface* dest)
 
     double a,m,x0,y0,x1,y1,x2,y2;
 	
-
-
-    for (int i = 0; i < nb; i++)
+    
+    /*for (;lignes;lignes = lignes->next) //retour au cartésien
     {
-        rho = lignes[2 * i];
-        theta = lignes[2 * i + 1];
+        rho = lignes ->rho;
+        theta = lignes->theta;
         a = cos(theta);
         m = sin(theta);
         x0 = a * rho;
@@ -394,8 +406,9 @@ SDL_Surface* hough(SDL_Surface* img, SDL_Surface* dest)
        	dest = drawLine(dest,(int)x1, (int)y1, (int)x2,(int)y2);
         
     }
-    return dest;
-
+    return dest;*/
+    
+    return detection (lignes, nb);
 
         
 }
