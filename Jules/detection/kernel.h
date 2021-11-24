@@ -5,9 +5,9 @@
 #include <err.h>
 #include "SDL/SDL.h"
 #include "SDL/SDL_image.h"
-#include "pixel-operation.h"
+#include "pixel_operations.h"
 
 
-int apply_kernel();
+void apply_kernel(char path[]);
 
 #endif

@@ -254,6 +254,45 @@ SDL_Surface* kernel (SDL_Surface* image_surface)
     return destination;
 }
 
+struct list {
+    struct  list    *next;
+    int             rho;
+    int             theta;
+};
+
+struct  list *empty_list() {return NULL; }
+
+int list_is_empty(struct list *l){
+    return l== NULL;
+}
+
+struct list *add(struct list *l, int x, int y){
+    struct list     *tmp;
+    tmp = malloc(sizeof(struct list))
+    tmp->rho = x;
+    tmp->theta = y;
+    tmp->next = l;
+    return tmp;
+}
+
+size_t list_len(struct liist *l) {
+    size_t      len;
+    for (len=0; l; l = l->next)
+        len += 1;
+    return len;
+}
+
+void list_remove(struct list **list, struct list *elm)
+{
+    struct list *cur = *list;
+    struct list *prev = NULL;
+    for (; cur != elm; cur = cur->next)
+        prev = cur;
+    if  (prev == NULL)
+        *list = cur->next;
+    else
+        prev->next = cur->next
+}
 
 
 #define PI 3.1415927
@@ -361,14 +400,22 @@ SDL_Surface* hough(SDL_Surface* img, SDL_Surface* dest)
         
 }
 
-void launch_hough (SDL_surface* image_surface)
+int main(int argc,char *argv[])
 {
 	
+	if (argc != 2)
+		errx(1, "must provide filename");
 	
+	#define filename argv[1]
+	
+	SDL_Surface* image_surface;
 	SDL_Surface* screen_surface;
 
+	// Initialize the SDL
+	init_sdl();
 
-
+	image_surface = load_image(filename);
+    SDL_Surface*  image_traite = image_surface;
 	
 	Uint32 pixel;
 	int w;
@@ -397,15 +444,22 @@ void launch_hough (SDL_surface* image_surface)
 	image_traite = Filter(image_surface);
 	
 	//image_surface = sobel(image_surface);
-	image_surface = kernel(image_traite);
-	//screen_surface =  display_image(image_surface);
-	//wait_for_keypressed();
+	image_traite = kernel(image_traite);
+	screen_surface =  display_image(image_traite);
+	wait_for_keypressed();
 
 	//update_surface(screen_surface, image_surface);
 	//wait_for_keypressed();
-	image_surface = hough(image_surface, image_surface);
+	image_surface = hough(image_traite, image_surface);
+	update_surface(screen_surface, image_surface);
+	
 	//update_surface(screen_surface, image_surface);
+	wait_for_keypressed();
 	
-	
+	//Free the image surface.
+	SDL_FreeSurface(image_surface);
+	// Free the screen surface.
+	SDL_FreeSurface(screen_surface);
 
+	return 0;
 }
