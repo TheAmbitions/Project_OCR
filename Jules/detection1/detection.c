@@ -254,61 +254,108 @@ SDL_Surface* kernel (SDL_Surface* image_surface)
     return destination;
 }
 
-struct list {
-    struct  list    *next;
-    double             rho;
-    double             theta;
-};
 
-struct  list *empty_list() {return NULL; }
-
-int list_is_empty(struct list *l){
-    return l== NULL;
-}
-
-struct list *add(struct list *l, double x, double y){
-    struct list     *tmp;
-    tmp = malloc(sizeof(struct list))
-    tmp->rho = x;
-    tmp->theta = y;
-    tmp->next = l;
-    return tmp;
-}
-
-size_t list_len(struct liist *l) {
-    size_t      len;
-    for (len=0; l; l = l->next)
-        len += 1;
-    return len;
-}
-
-void list_remove(struct list **list, struct list *elm)
-{
-    struct list *cur = *list;
-    struct list *prev = NULL;
-    for (; cur != elm; cur = cur->next)
-        prev = cur;
-    if  (prev == NULL)
-        *list = cur->next;
-    else
-        prev->next = cur->next
-}
 
 
 #define PI 3.1415927
 
-SDL_Surface* detection(struct list l,int len)
+int[] detection(double l[],int len)
 {
-    struct l_x,l_y;
-    int len_x = 0;
-    int len_y = 0;
-    double m_th1, m_rh1, m_th2,m_rh2; 
-    while (l != 0)
-    {
-        m_th = l->theta /500
-    }
+   	double theta,rho,eca;
+	double m_t,m_e;
+	int end = 0;
+	double li_1[30];
+	double li_2[30];
+	int i = 1;
+	int k;
+	int j;
+	//premiere recherche des droites parrallèles
+	while(i < len && end == 0)
+	{
+		theta = l[i];
+		m_t = theta/10;
+		li_1[0] = l[i-1];
+		li_1[1] = l[i];
+		k = 2;
+		j = 1;
+		while(j < len && theta+m_t> l[j]&& k <30)
+		{
+			if (l[j]>theta - m_t)
+			{
+				li_1[k] = l[j-1];
+				li_1[k+1] = l[j];
+				k += 2;	
+			}
+			j += 2;
+		}
+		
+		if (k > 15)
+		{
+			end = 1;
+		}
+		else
+			i += 2;
+	} 
+	if (end == 0)
+	{
+		printf("grille non détecté\n");
+		return [];
+	}
+	else
+	{
+		double x[20];
+		int xc;
+		int t;
+		i = 0
+		//recherche des vecteur avec un écart similaire
+		while (i<k && end)
+		{
+			rho = li_1[i];
+			j = 0;
+			x[0]=li_1[i];
+			x[1]=li_1[i+1];
+			end = 0;
+			while (j<k -1 && xc<20 && end == 0)
+			{
 
+				eca = li_1[j] - rho;
+				m_e = eca/10;
+				if (eca >50)
+				{
+					xc = 2;
+					x[xc] = li_1[j];
+					x[xc + 1] = li_1[j +1];
+					xc += 2;
+					t = 0;
+					while (t<k)
+					{
+						if (li_1[t] > rho + (t-j)eca - m_e &&
+							li_1[t] < rho + (t-j)eca + m_e)
+						{
+							x[xc] = li_[t];
+							x[xc + 1] = li_1[t +1];
+							xc += 2;
+						}
+						t += 2;
+					}
+					if (xc>6)
+					{
+						end = 1;
+					}
+					else
+						j += 2;
+				}
+				else
+					j += 2;
+			}
+			if (end == 0)
+				i += 2;
+		}
+		//recherche des perpendiculaire TODO
+	}
 }
+
+
 
 void SDL_ExitWithError(const char *message);
 
@@ -373,8 +420,7 @@ SDL_Surface* hough(SDL_Surface* img, SDL_Surface* dest)
     }
  
     int i = 0;
-
-    struct list *lignes = empty_list()
+    double lignes[nb*2];
 
     for (double i_theta = 0; i_theta < Ntheta; i_theta++)
     {
@@ -382,7 +428,8 @@ SDL_Surface* hough(SDL_Surface* img, SDL_Surface* dest)
         {
             if (accum_seuil[(int)(i_theta* width +i_rho)] !=0)
             {
-                lignes = add(lignes, i_rho * drho, i_theta * dtheta);
+                lignes[i*2] = i_rho * drho;
+                lignes[i*2+1] = i_theta * dtheta;
                 i = i + 1;
             }
         }
@@ -408,7 +455,7 @@ SDL_Surface* hough(SDL_Surface* img, SDL_Surface* dest)
     }
     return dest;*/
     
-    return detection (lignes, nb);
+    return detection (lignes, 2*nb);
 
         
 }

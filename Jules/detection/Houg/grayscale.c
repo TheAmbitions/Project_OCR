@@ -733,6 +733,8 @@ SDL_Surface* hough(SDL_Surface* img, SDL_Surface* dest)
             {
                 lignes[i * 2] = i_rho * drho;
                 lignes[i *2 +1] = i_theta * dtheta;
+                printf("%i\nrho -> %lf\ntheta ->%lf\n",i,lignes[i*2],lignes[i*2
+                + 1]);
                 i = i + 1;
             }
         }
