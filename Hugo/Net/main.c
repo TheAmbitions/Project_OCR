@@ -2,6 +2,7 @@
 #include <err.h>
 #include <SDL/SDL.h>
 #include <SDL/SDL_image.h>
+#include <math.h>
 
 #include "display.h"
 #include "pixel_operations.h"
@@ -39,6 +40,32 @@ typedef struct Network
 
 /*------------------------------------------------------------------------------ Feedforward --------------------------------------------------------------------------------*/
 
+void softmax(double input[], size_t size)
+{
+	size_t i;
+	double m;
+	/* Find maximum value from input array */
+	m = input[0];
+	for (i = 1; i < size; i++)
+	{
+		if (input[i] > m) 
+		{
+			m = input[i];
+		}
+	}
+
+	double sum = 0;
+	for (i = 0; i < size; i++)
+	{
+		sum += expf(input[i] - m);
+	}
+
+	for (i = 0; i < size; i++) 
+	{
+		input[i] = expf(input[i] - m - log(sum));
+	}
+}
+
 void create_values(size_t line, size_t col, double m1[], double w[line][col], double b[], double val[])
 {
 	size_t j, k;
@@ -52,7 +79,6 @@ void create_values(size_t line, size_t col, double m1[], double w[line][col], do
 			val[j] += m1[k] * w[k][j];
 		}
 		val[j] += b[j];
-		val[j] = sigmoid(val[j]);
 	}
 }
 
@@ -60,9 +86,12 @@ void feedforward(Network* net)
 {
 	//input layer to hidden layer
 	create_values(net->inputsize, net->hiddensize, net->input, net->w1, net->b1, net->values);
+	for (size_t i = 0; i < net->hiddensize; i++)
+		net->values[i] = sigmoid(net->values[i]);
 
 	// hidden layer to output layer
 	create_values(net->hiddensize, net->outputsize, net->values, net->w2, net->b2, net->output);
+	softmax(net->output, net->outputsize);
 }
 
 /*------------------------------------------------------------------------------ Backprop --------------------------------------------------------------------------------*/
@@ -85,7 +114,9 @@ void backprop(Network *net, double y[], float eta)
 	//update errors of the output layer
 	size_t i;
 	for (i = 0; i < net->outputsize; i++)
+	{
 		net->output[i] = (y[i] - net->output[i]) * sigmoid_prime(net->output[i]) * eta;
+	}
 
 	//update w2 of the network
 	adjust_weights(net->hiddensize, net->outputsize, net->values, net->output, net->w2);
@@ -310,13 +341,13 @@ int main()
 	for (i = 0; i < 18; i++)
 		training(&network, train_arr[i], expected[i], 0);
 
-	test_img(&network, "img/1,1.png", 1);
-	test_img(&network, "img/2,1.png", 2);
-	test_img(&network, "img/3,1.png", 3);
-	test_img(&network, "img/4,1.png", 4);
-	test_img(&network, "img/5,1.png", 5);
-	test_img(&network, "img/6,1.png", 6);
-	test_img(&network, "img/7,1.png", 7);
-	test_img(&network, "img/8,1.png", 8);
-	test_img(&network, "img/9,1.png", 9);
+	test_img(&network, "img/1.png", 1);
+	test_img(&network, "img/2.png", 2);
+	test_img(&network, "img/3.png", 3);
+	test_img(&network, "img/4.png", 4);
+	test_img(&network, "img/5.png", 5);
+	test_img(&network, "img/6.png", 6);
+	test_img(&network, "img/7.png", 7);
+	test_img(&network, "img/8.png", 8);
+	test_img(&network, "img/9.png", 9);
 }
