@@ -8,15 +8,14 @@ LDFLAGS=
 LDLIBS= `pkg-config --libs sdl SDL_image` -lm
 
 
-all: canny
+all: hough
 
-main: pixel_operations.o canny.o main.o
+hough: pixel_operations.o display.o detection.o hough.o
 
 
 clean:
 	${RM} *.o
 	${RM} *.d
-	${RM} canny
-	${RM} main
+	${RM} hough
 
 # END

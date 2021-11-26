@@ -33,11 +33,11 @@ double ecart_type (double l[], int len, int s, double moy)
     return sqrt(var);
 }
 
-void gauss (double l[], int len, double eca, double moy)
+int gauss (double l[], int len, double eca, double moy)
 {
     int k = 0;
     double f = 0.5;
-    while ( k < 9)
+    while ( k < 10)
     {
         for (int i = 2; i < len * 3; i += 3)
         {
@@ -49,7 +49,35 @@ void gauss (double l[], int len, double eca, double moy)
         }
         f += 0.5;
     }
+    return k;
 }
+
+/*void mediane (double l[], int t, double r_m, double t_m)
+{
+    int med = t/2;
+    double new[3*t];
+    int i = 2;
+    int j = 0;
+    while (i<t*3)
+    {
+        if(l[j] == 2)
+        {
+            new[i] = l[j - 2];
+            new[i + 1] = l[j - 1];
+            if (i<med)
+            {
+                new[i + 2] = 1;
+            }
+            else
+            {
+                new[i +2] = 2;
+            }
+            i += 3;
+        }
+        j += 3;
+    }
+    l = new;
+}*/
 
 
 void search (double l[], int len)
@@ -84,14 +112,18 @@ void search (double l[], int len)
         }
     }
     double s = 1;
-    double eca1 = ecart_type (l1, nb * 3, 1);
-    double eca2 = ecart_type (l2, (len - nb) * 3, 1);
-    
+
     double moy1 = moyenne(l1,nb * 3, 1, 3);
     double moy2 = moyenne(l2, (len - nb) *3, 1, 3);
-    
-    gauss(l1,nb,eca1, moy1);
-    gauss(l2, (len - nb) ,eca2,moy2);
+
+    double eca1 = ecart_type (l1, nb * 3, 1,moy1);
+    double eca2 = ecart_type (l2, (len - nb) * 3, 1,moy2);
+      
+    int t1 = gauss(l1,nb,eca1, moy1);
+    int t2 = gauss(l2, (len - nb) ,eca2,moy2);
+
+    mediane (l1,t1);
+    meidane (l2,t2);
     
     /*for (i = 0; i<nb *3; i+=3)
     {

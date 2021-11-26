@@ -1,525 +1,165 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <err.h>
-#include <math.h>
-#include "SDL/SDL.h"
-#include "SDL/SDL_image.h"
-#include "pixel_operations.h"
-
-#include "display.h"
-
-
-SDL_Surface* drawLine(SDL_Surface* surf,int x1,int y1, int x2,int y2)  // Bresenham
-{
-        /*float x = (float)x1;
-    float end = (float)(x2)+0.001;8*/
-	long w = surf -> w;
-        long h = surf -> h;
-        Uint32 pixel = SDL_MapRGB(surf->format, 255, 0, 0);
-
-        if (x1> x2)
-        {
-                int temp = x1;
-                x1 = x2;
-                x2 = temp;
-                temp = y1;
-                y1 = y2;
-                y2 = temp;
-        }
-
-        else
-        {
-                if (x1 == x2)
-                {
-                        if (y1 > y2)
-                        {
-                                int temp = y1;
-		                y1 = y2;
-                		y2 = temp;
-                		temp = x1;
-                		x1 = x2;
-                		x2 = temp;
-                        }
-			while ( y1 <= y2 && y1 < h)
-                        {
-                                if (y1 > -1)
-                                	put_pixel(surf,x1,y1, pixel);
-                                y1 += 1;
-                        }
-
-		}
-	}
-
-        float a = ((float)(y2-y1) / (float)(x2-x1));
-        int y = y1;
-        while (x1 <= x2 && x1 < w)
-        {
-                y = y1 + (int)((float)x1 * a);
-                if (x1 > -1 && y > -1 && y < h)
-                {
-                    put_pixel(surf, x1,y,pixel);
-                }
-                x1 += 1;
-        }
-        return  surf;
-
-}
-
-
-SDL_Surface* Filter(SDL_Surface* source)
-{
-	SDL_Surface *target;
-	int x, y;
-
-	if( source->flags & SDL_SRCCOLORKEY )
-	{	
-		target = SDL_CreateRGBSurface( SDL_SWSURFACE, source->w ,source->h, source->format->BitsPerPixel, source->format->Rmask, source->format->Gmask, source->format->Bmask, 0 );
-        }
-    	else
-        {
-        	target = SDL_CreateRGBSurface( SDL_SWSURFACE, source->w ,source->h, source->format->BitsPerPixel, source->format->Rmask, source->format->Gmask, source->format->Bmask, source->format->Amask );
-	}
-
-	int w = source->w;
-	int h = source->h;
-	for(y=0; y<h; y++)
-	{
-		for(x=0; x<w; x++)
-		{
-			unsigned r = 0, g = 0, b = 0;
-			Uint8 rt, gt, bt;
-			if (y != 0) 
-			{
-			   
-			   	unsigned o = get_pixel(source, x, y-1);
-				SDL_GetRGB(o, source->format, &rt, &gt, &bt);
-				r += rt;
-				g += gt;
-				b += bt;
-				
-			}
-			
-
-			if (x != 0)
-			{
-				unsigned d = get_pixel(source, x-1, y);
-				SDL_GetRGB(d, source->format, &rt, &gt, &bt);
-				r += rt;
-				g += gt;
-				b += bt;
-			}
-			
-			if ((x != 0) && (y != 0))
-			{
-				unsigned a = get_pixel(source,x-1, y-1);
-				SDL_GetRGB(a, source->format, &rt, &gt, &bt);
-				r += rt;
-				g += gt;
-				b += bt;
-			}
-			
-			if ((x < w-1) && (y !=0))
-			{
-				
-				unsigned c = get_pixel(source, x+1, y-1);
-				SDL_GetRGB(c, source->format, &rt, &gt, &bt);
-				r += rt;
-				g += gt;
-				b += bt;
-			}
-			
-			if (x < w-1) 
-			{
-				unsigned e = get_pixel(source,x+1, y);
-				SDL_GetRGB(e, source->format, &rt, &gt, &bt);
-				r += rt;
-				g += gt;
-				b += bt;
-			}
-			
-			if ((x !=0 ) && (y < h+1))
-			{
-					
-				unsigned f = get_pixel(source,x-1, y+1);
-				SDL_GetRGB(f, source->format, &rt, &gt, &bt);
-				r += rt;
-				g += gt;
-				b += bt;
-			
-			}
-			
-			
-			if (y < h-1) 
-			{
-				unsigned k = get_pixel(source,x  , y+1);
-				SDL_GetRGB(k, source->format, &rt, &gt, &bt);
-				r += rt;
-				g += gt;
-				b += bt;
-			}
-			
-						
-			if ((x < w+1 ) && (y < h+1))
-			{
-					
-				unsigned h = get_pixel(source,x+1, y+1);
-				SDL_GetRGB(h, source->format, &rt, &gt, &bt);
-				r += rt;
-				g += gt;
-				b += bt;
-							
-			}
-			
-			unsigned z = get_pixel(source, x, y);
-			SDL_GetRGB(z, source->format, &rt, &gt, &bt);
-			r += rt;
-			g += gt;
-			b += bt;
-		
-		   	
-		   	r/=9;
-		   	g/=9;
-		   	b/=9;
-			
-			
-			unsigned avg = SDL_MapRGB(target->format, r, g, b);
-		   	put_pixel(target,x, y, avg);
-		}
-	}
-	return target;
-}
-
-SDL_Surface* kernel (SDL_Surface* image_surface)
-{
-
-
-    Uint8 r, g, b;
-    Uint8 r1, g1, b1;
-    Uint8 r2, g2, b2;
-    Uint8 r3, g3, b3;
-    Uint8 r4, g4, b4;
-    Uint8 r5, g5, b5;
-    Uint8 r6, g6, b6;
-    Uint8 r7, g7, b7;
-    Uint8 r8, g8, b8;
-    Uint8 color;
-    Uint32 pixel,pixel1,pixel2,pixel3,pixel4,pixel5,pixel6,pixel7,pixel8;
-
-    Uint32 Blackpixel = SDL_MapRGB(image_surface->format, 0, 0, 0);
-    Uint32 Whitepixel = SDL_MapRGB(image_surface->format, 255, 255, 255);
-
-    long width = image_surface -> w;
-    long hight = image_surface -> h;
-
-    SDL_Surface* destination = SDL_CreateRGBSurface(SDL_HWSURFACE, width, hight, image_surface->format->BitsPerPixel,
-                 image_surface->format->Rmask, image_surface->format->Gmask, image_surface->format->Bmask, image_surface->format->Amask);
-
-    for (long y = 1 ; y < hight - 1; y++)
-    {
-        for (long x = 1; x < width - 1; x++)
-        {
-                pixel = get_pixel(image_surface, x, y);
-                pixel1 = get_pixel(image_surface, x+1, y);
-                pixel2 = get_pixel(image_surface, x+1, y+1);
-                pixel3 = get_pixel(image_surface, x+1, y-1);
-                pixel4 = get_pixel(image_surface, x, y-1);
-                pixel5 = get_pixel(image_surface, x, y+1);
-                pixel6 = get_pixel(image_surface, x-1, y-1);
-                pixel7 = get_pixel(image_surface, x-1, y);
-                pixel8 = get_pixel(image_surface, x-1, y+1);
-
-                SDL_GetRGB(pixel, image_surface -> format, &r, &g, &b);
-                SDL_GetRGB(pixel1, image_surface -> format, &r1, &g1, &b1);
-                SDL_GetRGB(pixel2, image_surface -> format, &r2, &g2, &b2);
-                SDL_GetRGB(pixel3, image_surface -> format, &r3, &g3, &b3);
-                SDL_GetRGB(pixel4, image_surface -> format, &r4, &g4, &b4);
-                SDL_GetRGB(pixel5, image_surface -> format, &r5, &g5, &b5);
-                SDL_GetRGB(pixel6, image_surface -> format, &r6, &g6, &b6);
-                SDL_GetRGB(pixel7, image_surface -> format, &r7, &g7, &b7);
-                SDL_GetRGB(pixel8, image_surface -> format, &r8, &g8, &b8);
-
-                color = r -(r1/8 + r2/8 + r3/8 + r4/8 + r5/8 + r6/8 + r7/8 + r8/8);
-
-                if (color > 250)
-                {
-                        put_pixel(destination, x, y, Whitepixel);
-                }
-                else
-                {
-                        put_pixel(destination, x, y, Blackpixel);
-                }
-         }          
-    }
-    
-    return destination;
-}
-
+#include "math.h"
 
 
 
 #define PI 3.1415927
 
-int[] detection(double l[],int len)
+double abss(double n)
 {
-   	double theta,rho,eca;
-	double m_t,m_e;
-	int end = 0;
-	double li_1[30];
-	double li_2[30];
-	int i = 1;
-	int k;
-	int j;
-	//premiere recherche des droites parrallèles
-	while(i < len && end == 0)
-	{
-		theta = l[i];
-		m_t = theta/10;
-		li_1[0] = l[i-1];
-		li_1[1] = l[i];
-		k = 2;
-		j = 1;
-		while(j < len && theta+m_t> l[j]&& k <30)
-		{
-			if (l[j]>theta - m_t)
-			{
-				li_1[k] = l[j-1];
-				li_1[k+1] = l[j];
-				k += 2;	
-			}
-			j += 2;
-		}
-		
-		if (k > 15)
-		{
-			end = 1;
-		}
-		else
-			i += 2;
-	} 
-	if (end == 0)
-	{
-		printf("grille non détecté\n");
-		return [];
-	}
-	else
-	{
-		double x[20];
-		int xc;
-		int t;
-		i = 0
-		//recherche des vecteur avec un écart similaire
-		while (i<k && end)
-		{
-			rho = li_1[i];
-			j = 0;
-			x[0]=li_1[i];
-			x[1]=li_1[i+1];
-			end = 0;
-			while (j<k -1 && xc<20 && end == 0)
-			{
+    if (n<0)
+        return -n;
+    return n;
+}
 
-				eca = li_1[j] - rho;
-				m_e = eca/10;
-				if (eca >50)
-				{
-					xc = 2;
-					x[xc] = li_1[j];
-					x[xc + 1] = li_1[j +1];
-					xc += 2;
-					t = 0;
-					while (t<k)
-					{
-						if (li_1[t] > rho + (t-j)eca - m_e &&
-							li_1[t] < rho + (t-j)eca + m_e)
-						{
-							x[xc] = li_[t];
-							x[xc + 1] = li_1[t +1];
-							xc += 2;
-						}
-						t += 2;
-					}
-					if (xc>6)
-					{
-						end = 1;
-					}
-					else
-						j += 2;
-				}
-				else
-					j += 2;
-			}
-			if (end == 0)
-				i += 2;
-		}
-		//recherche des perpendiculaire TODO
-	}
+double moyenne (double l[], int len, int s, int pas)
+{
+    double res = 0;
+    double count = 0;
+    while (s<len)
+    {
+        res += l[s];
+        count += 1;
+        s += pas;
+    }
+    return res / count;
 }
 
 
 
-void SDL_ExitWithError(const char *message);
 
-SDL_Surface* hough(SDL_Surface* img, SDL_Surface* dest)
+double ecart_type (double l[], int len, double moy)
 {
-
-    Uint32 pixel;
-    Uint8 r,g,b;
-
-    double width = img -> w;
-    double height = img -> h;
-
-    double rho = 1;
-    double theta = 1;
-    double Ntheta = 180/theta;
-    double Nrho = floor( sqrt(width * width + height * height))/rho;
-    double dtheta = PI / Ntheta;
-    double drho = floor(sqrt(width * width + height * height))/Nrho;
-    double accum[(int) (Ntheta * Nrho)];
-    double i_rho;
-    int seuil = 130;
-
-    for (double i = 0; i < Ntheta * Nrho; i++)
-        accum[(int) i] = 0;
-
-    for (double y = 0; y < height; y++)
+    double var = 0;
+    for (int n = 0;  n < len; n += 3)
     {
-        for (double x = 0; x < width; x++)
+        var += (l[n] - moy) * (l[n] - moy);
+    }
+    var = var / (len / 3);
+    return sqrt(var);
+}
+
+int gauss (double l[], int len, double eca, double moy)
+{
+    int k = 0;
+    double f = 0.5;
+    while ( k < 10)
+    {
+        for (int i = 2; i < len * 3; i += 3)
         {
-            pixel = get_pixel(img,x ,y);
-            SDL_GetRGB (pixel, img -> format, &r,&g,&b);
-            if ( r == 255)
+            if (abss(moy - l[i -1]) < f * eca)
             {
-                for (double i_theta = 0; i_theta < Ntheta; i_theta++)
-                {
-                    theta = i_theta * dtheta;
-                    rho = x * cos(theta) + (height - y) * sin(theta);
-                    i_rho = (rho/drho);
-                    if ((i_rho>0) && (i_rho < Nrho))
-                        accum [(int)(i_theta * width +i_rho)] += 1; 
-                }
+                l[i] = 2;
+                k += 1;
             }
         }
+        f += 0.5;
     }
-    int nb = 0;
-    double accum_seuil[(int) (Ntheta * Nrho)];
-    for (double i = 0; i < Ntheta * Nrho; i++)
-        accum_seuil[(int)i] = accum[(int)i];
-    
-    for (double i_theta = 0; i_theta < Ntheta; i_theta++)
+    return k;
+}
+
+/*void mediane (double l[], int t, double r_m, double t_m)
+{
+    int med = t/2;
+    double new[3*t];
+    int i = 2;
+    int j = 0;
+    while (i<t*3)
     {
-        for (double i_rho = 0; i_rho < Nrho; i_rho++)
+        if(l[j] == 2)
         {
-            if (accum[(int)(i_theta* width +i_rho)] < seuil)
+            new[i] = l[j - 2];
+            new[i + 1] = l[j - 1];
+            if (i<med)
             {
-                accum_seuil[(int)(i_theta * width + i_rho)] = 0;
+                new[i + 2] = 1;
             }
             else
-                nb += 1;
-
-        }
-    }
- 
-    int i = 0;
-    double lignes[nb*2];
-
-    for (double i_theta = 0; i_theta < Ntheta; i_theta++)
-    {
-        for (double i_rho = 0; i_rho < Nrho; i_rho++)
-        {
-            if (accum_seuil[(int)(i_theta* width +i_rho)] !=0)
             {
-                lignes[i*2] = i_rho * drho;
-                lignes[i*2+1] = i_theta * dtheta;
-                i = i + 1;
+                new[i +2] = 2;
             }
+            i += 3;
+        }
+        j += 3;
+    }
+    l = new;
+}*/
+
+
+void search (double l[], int len)
+{
+    double moy = moyenne (l , len , 1, 2);
+    int nb = 0;
+    int i,j,k;
+    for (i = 1; i < len; i += 2)
+    {
+        if ( l[i] < moy)
+            nb += 1;
+    }
+    double l1[nb * 3];
+    double l2[(len - nb)*3];
+    j = 0;
+    k = 0;
+    for (i = 0; i < len; i += 2)
+    {
+        if (l[i] < moy)
+        {
+            l1[j] = l[i];
+            l1[j+1] = l[i+1];
+            l1[j+2] = 1;
+            j += 3;
+        }
+        else
+        {
+            l2[k] = l[i];
+            l2[k+1] = l[i+1];
+            l2[k+2] = 1;
+            k += 3;
         }
     }
 
-    double a,m,x0,y0,x1,y1,x2,y2;
-	
+    double moy1 = moyenne(l1,nb * 3, 1, 3);
+    double moy2 = moyenne(l2, (len - nb) *3, 1, 3);
+
+    double eca1 = ecart_type (l1, nb * 3, moy1);
+    double eca2 = ecart_type (l2, (len - nb) * 3, moy2);
+      
+    /*int t1 = */gauss(l1,nb,eca1, moy1);
+    /*int t2 =*/ gauss(l2, (len - nb) ,eca2,moy2);
+
+    //mediane (l1,t1);
+    //meidane (l2,t2);
     
-    /*for (;lignes;lignes = lignes->next) //retour au cartésien
+    for (i = 0; i<nb *3; i+=3)
     {
-        rho = lignes ->rho;
-        theta = lignes->theta;
-        a = cos(theta);
-        m = sin(theta);
-        x0 = a * rho;
-        y0 = m * rho;
-        x1  = (x0 + 1000 * (-m));
-        y1 = (y0 + 1000 * (a));
-        x2 = (x0 - 1000 *(-m));
-        y2 = (y0 - 1000 * (a));
-       	dest = drawLine(dest,(int)x1, (int)y1, (int)x2,(int)y2);
-        
+        printf("    rho:  %lf\n    theta:%lf\n    use:  %lf\n\n", l1[i],l1[i+1],l1[i+2]);
     }
-    return dest;*/
-    
-    return detection (lignes, 2*nb);
+    printf("CHANGEMENT DE LISTE\n\n");
+    for (i = 0; i< (len - nb) *3; i += 3)
+    {
+        printf("    rho:  %lf\n    theta:%lf\n    use:  %lf\n\n", l2[i],l2[i+1],l2[i+2]);
+    }
+}   
 
-        
-}
 
-int main(int argc,char *argv[])
+/*int main()
 {
-	
-	if (argc != 2)
-		errx(1, "must provide filename");
-	
-	#define filename argv[1]
-	
-	SDL_Surface* image_surface;
-	SDL_Surface* screen_surface;
-
-	// Initialize the SDL
-	init_sdl();
-
-	image_surface = load_image(filename);
-    SDL_Surface*  image_traite = image_surface;
-	
-	Uint32 pixel;
-	int w;
-	int h;
-	w = image_surface -> w;
-	h = image_surface -> h;
-	
-	Uint8 r, g, b, average;
- 
-    	
-
-    
-	for(int i = 0; i < w; i++)
-	{
-		for(int j = 0; j < h; j++)
-		{
-			pixel = get_pixel(image_surface, i, j);
-			SDL_GetRGB(pixel, image_surface->format, &r, &g, &b);
-			average = r * 0.3 + g * 0.59 + b * 0.11;
-		        
-			pixel = SDL_MapRGB(image_surface->format, average, average, average);
-			put_pixel(image_surface,i,j,pixel);
-		}
-  	}
- 	
-	image_traite = Filter(image_surface);
-	
-	//image_surface = sobel(image_surface);
-	image_traite = kernel(image_traite);
-	screen_surface =  display_image(image_traite);
-	wait_for_keypressed();
-
-	//update_surface(screen_surface, image_surface);
-	//wait_for_keypressed();
-	image_surface = hough(image_traite, image_surface);
-	update_surface(screen_surface, image_surface);
-	
-	//update_surface(screen_surface, image_surface);
-	wait_for_keypressed();
-	
-	//Free the image surface.
-	SDL_FreeSurface(image_surface);
-	// Free the screen surface.
-	SDL_FreeSurface(screen_surface);
-
-	return 0;
-}
+    double k = 0;
+    double l[60];
+    for (int i = 0; i < 34;i+= 2)
+    {
+        l[i] = k;
+        k += 100;
+        l[i+1] = 0;
+    }
+    k = 0;
+    for (int i = 34; i< 60; i += 2)
+    {
+        l[i] = k;
+        l[i + 1] = PI/2;
+        k += 100;
+    }
+    search(l,60);
+    return 1;
+}*/
