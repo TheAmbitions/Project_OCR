@@ -213,27 +213,6 @@ void noiseReduction(SDL_Surface *img)
  }
 }
 
-
-void clean_bruits(int x, int y, int mat[x][y])
-{
-	int count = 0; //compteur de pixel par ligne
-	for (int i = 0; i < x-3; ++i)
-	{
-		count=0;
-		for (int j = 0; j < y; ++j)
-		{
-
-			if (mat[i][j]==1)
-			count++;
-		}
-		if (count<2)
-		{
-			for (int j = 0; j < y; ++j)
-				mat[i][j]=0;
-		}
-	}
-}
-
 SDL_Surface* Filter(SDL_Surface* source)
 {
 	SDL_Surface *target;
