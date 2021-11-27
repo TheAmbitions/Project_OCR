@@ -32,12 +32,17 @@ double moyenne (double l[], int len, int s, int pas)
 double ecart_type (double l[], int len, double moy)
 {
     double var = 0;
-    for (int n = 0;  n < len; n += 3)
+    for (int n = 1;  n < len; n += 3)
     {
+	printf("theta l = %lf\n",l[n]);
         var += (l[n] - moy) * (l[n] - moy);
+	printf("var dedans:%lf\n",var);
     }
+    printf("%lf\n",var);
     var = var / (len / 3);
-    return sqrt(var);
+    var = sqrt(var);
+    printf("sqrt:%lf\n",var);
+    return var;
 }
 
 int gauss (double l[], int len, double eca, double moy)
@@ -48,9 +53,11 @@ int gauss (double l[], int len, double eca, double moy)
     {
         for (int i = 2; i < len * 3; i += 3)
         {
-            if (abss(moy - l[i -1]) < f * eca)
+	    //printf("sigma = %lf  ecart = %lf\n",f*eca,abss(moy - l[i -1]));
+            if (abss(moy - l[i -1]) <= f * eca)
             {
                 l[i] = 2;
+		//printf("    rho:  %lf\n    theta:%lf\n    use:  %lf\n\n", l[i-2],l[i-1],l[i]);
                 k += 1;
             }
         }
@@ -90,20 +97,25 @@ int gauss (double l[], int len, double eca, double moy)
 void search (double l[], int len)
 {
     double moy = moyenne (l , len , 1, 2);
+    printf("moyenne = %lf", moy);
     int nb = 0;
+    int nb2 = 0;
     int i,j,k;
     for (i = 1; i < len; i += 2)
     {
         if ( l[i] < moy)
             nb += 1;
+        else
+            nb2 += 1;
     }
     double l1[nb * 3];
-    double l2[(len - nb)*3];
+    double l2[nb2*3];
     j = 0;
     k = 0;
     for (i = 0; i < len; i += 2)
     {
-        if (l[i] < moy)
+	//printf("theta liste 1: %lf\n",l[i +1]);
+        if (l[i+1] < moy)
         {
             l1[j] = l[i];
             l1[j+1] = l[i+1];
@@ -112,6 +124,7 @@ void search (double l[], int len)
         }
         else
         {
+            //printf("theta = %lf > moyenne = %lf \n",l[i+1],moy);
             l2[k] = l[i];
             l2[k+1] = l[i+1];
             l2[k+2] = 1;
@@ -120,26 +133,30 @@ void search (double l[], int len)
     }
 
     double moy1 = moyenne(l1,nb * 3, 1, 3);
-    double moy2 = moyenne(l2, (len - nb) *3, 1, 3);
+    double moy2 = moyenne(l2, nb2 *3, 1, 3);
 
     double eca1 = ecart_type (l1, nb * 3, moy1);
-    double eca2 = ecart_type (l2, (len - nb) * 3, moy2);
+    //printf("sigma = %lf  moyenne = %lf\n",eca1,moy);
+    double eca2 = ecart_type (l2, nb2 * 3, moy2);
+
+    //printf("sigma = %lf  moyenne = %lf\n",eca2,moy);
       
-    /*int t1 = */gauss(l1,nb,eca1, moy1);
-    /*int t2 =*/ gauss(l2, (len - nb) ,eca2,moy2);
+    /*int t1 =*/ gauss(l1,nb,eca1, moy1);
+    /*int t2 =*/ gauss(l2, nb2 ,eca2,moy2); 
 
     //mediane (l1,t1);
-    //meidane (l2,t2);
-    
+    //mediane (l2,t2);
+      
     for (i = 0; i<nb *3; i+=3)
     {
         printf("    rho:  %lf\n    theta:%lf\n    use:  %lf\n\n", l1[i],l1[i+1],l1[i+2]);
     }
     printf("CHANGEMENT DE LISTE\n\n");
-    for (i = 0; i< (len - nb) *3; i += 3)
+    for (i = 0; i< nb2 *3; i += 3)
     {
         printf("    rho:  %lf\n    theta:%lf\n    use:  %lf\n\n", l2[i],l2[i+1],l2[i+2]);
     }
+    printf("fin de la liste 2\n\n");
 }   
 
 

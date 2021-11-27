@@ -74,13 +74,18 @@ get_text_and_rect(SDL_Renderer *renderer,
 
 // genboard -- generate sudoku board
 void
-genboard(int grid[9][9])
+genboard(int grid[9][9], int grid_2[9][9])
 {
     for (int y = 0; y < SUDYMAX; y++)
     {
 	for (int x = 0; x < SUDYMAX; x++)
 	{
-             brd[y][x] = grid[y][x];
+            if (grid[y][x] != grid_2[y][x])
+            {
+                brd[y][x] = grid_2[y][x] + 10;
+            }
+            else
+                brd[y][x] = grid[y][x];
 	}
     }
 }
@@ -201,20 +206,42 @@ drawtext(SDL_Renderer *renderer)
 
         for (int xbox = 0;  xbox < boxmax_x;  ++xbox) {
             int chr = brd[ybox][xbox];
-            if (chr != 0)
-                buf[0] = chr + '0';
+            if (chr < 10)
+            {
+                SDL_SetRenderDrawColor(renderer,0,0,0,0);
+                if (chr != 0)
+                    buf[0] = chr + '0';
+                else
+                   buf[0] = ' ';
+                buf[1] = 0;
+                get_text_and_rect(renderer, 0, 0, buf, font, &texture, &trect);
+
+                int xbase = xbox * gridmax;
+                grect.x = xbase + gridmax / 3;
+                grect.w = gridmax / 3;
+
+                SDL_RenderCopy(renderer, texture, &trect, &grect);
+
+                SDL_DestroyTexture(texture);
+            }
             else
-                buf[0] = ' ';
-            buf[1] = 0;
-            get_text_and_rect(renderer, 0, 0, buf, font, &texture, &trect);
+            {
+                
+                if (chr != 0)
+                    buf[0] = chr + '0' - 10;
+                else
+                    buf[0] = ' ';
+                buf[1] = 0;
+                get_text_and_rect(renderer, 0, 0, buf, font, &texture, &trect);
 
-            int xbase = xbox * gridmax;
-            grect.x = xbase + gridmax / 3;
-            grect.w = gridmax / 3;
+                int xbase = xbox * gridmax;
+                grect.x = xbase + gridmax / 3;
+                grect.w = gridmax / 3;
 
-            SDL_RenderCopy(renderer, texture, &trect, &grect);
+                SDL_RenderCopy(renderer, texture, &trect, &grect);
 
-            SDL_DestroyTexture(texture);
+                SDL_DestroyTexture(texture);
+            }
         }
     }
 }
@@ -275,8 +302,8 @@ fontinit(const char *font_tail)
         case 0:
             dir = NULL;
             break;
-        default:  // NOTE: my system needed this
-            dir = "/usr/share/fonts/truetype/freefont";
+        default:
+            dir = "";
             break;
         }
 
@@ -326,7 +353,17 @@ main(int argc, char **argv)
                        { 1, 3, 0, 0, 0, 0, 2, 5, 0 },
                        { 0, 0, 0, 0, 0, 0, 0, 7, 4 },
                        { 0, 0, 5, 2, 0, 6, 3, 0, 0 } };
-    genboard(grid);
+
+    int grid_res[9][9] = { { 3, 4, 6, 5, 0, 8, 4, 0, 0 },
+                       { 5, 2, 5, 0, 0, 0, 0, 0, 0 },
+                       { 0, 8, 7, 0, 0, 0, 0, 3, 1 },
+                       { 0, 0, 3, 0, 1, 6, 0, 8, 0 },
+                       { 9, 0, 0, 8, 6, 3, 0, 0, 5 },
+                       { 0, 5, 0, 0, 9, 0, 6, 0, 0 },
+                       { 1, 3, 0, 0, 0, 0, 2, 5, 0 },
+                       { 0, 0, 0, 0, 0, 0, 0, 7, 4 },
+                       { 0, 0, 5, 2, 0, 6, 3, 0, 0 } };
+    genboard(grid, grid_res);
 
     prtboard(brd);
     /* Inint TTF. */

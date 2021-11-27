@@ -35,10 +35,17 @@ typedef struct Application
 
     SDL_Surface* image_surface;
     SDL_Surface* dis_img;
-
+    
     Image image;
     UserInterface ui;
 }App;
+
+typedef struct ProgressBar
+{
+    int is_training;
+    GtkDialog *pro_w;
+    GtkProgressBar* pro_bar;
+}Bar;
 
 SDL_Surface* resize(SDL_Surface *img)
 {
@@ -102,9 +109,30 @@ void on_resolve(GtkButton *button, gpointer user_data)
     g_print("resolve\n");
 }
 
+gboolean handle_progress(GtkProgressBar* bar)
+{
+    gtk_progress_bar_pulse(bar);
+    gtk_progress_bar_set_pulse_step(bar, 1.0);
+    return TRUE;
+}
+
 void on_network(GtkButton *button, gpointer user_data)
 {
-    g_print("training\n");
+    GtkBuilder* builder = gtk_builder_new();
+    GError* error = NULL;
+    if (gtk_builder_add_from_file(builder, "progress.glade", &error) == 0)
+    {
+        g_printerr("Error loading file: %s\n", error->message);
+        g_clear_error(&error);
+    }
+    else
+    {
+	GtkDialog* pro_w = GTK_DIALOG(gtk_builder_get_object(builder, "pro_w"));
+        GtkProgressBar* pro_bar = GTK_PROGRESS_BAR(gtk_builder_get_object(builder, "pro_bar"));
+
+        gtk_dialog_run(pro_w);
+        g_timeout_add(1000, (GSourceFunc)handle_progress, pro_bar);
+    }
 }
 
 gboolean Automatic(GtkWidget* widget, gpointer user_data)
@@ -281,7 +309,7 @@ int main (int argc, char *argv[])
             .Manual = Manual,
             .Noise = Noise,
             .bw = bw,
-            .Grid = Grid
+            .Grid = Grid,
         }
     };
 

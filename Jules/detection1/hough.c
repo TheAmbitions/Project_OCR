@@ -241,7 +241,7 @@ SDL_Surface* kernel (SDL_Surface* image_surface)
 
                 color = r -(r1/8 + r2/8 + r3/8 + r4/8 + r5/8 + r6/8 + r7/8 + r8/8);
 
-                if (color > 250)
+                if (color > 246)
                 {
                         put_pixel(destination, x, y, Whitepixel);
                 }
@@ -413,7 +413,9 @@ int main(int argc,char *argv[])
 
 	//update_surface(screen_surface, image_surface);
 	//wait_for_keypressed();
+    printf("avant hough\n\n\n");
 	image_surface = hough(image_traite, image_surface);
+    printf("apres hough\n\n");
 	update_surface(screen_surface, image_surface);
 	
 	//update_surface(screen_surface, image_surface);
