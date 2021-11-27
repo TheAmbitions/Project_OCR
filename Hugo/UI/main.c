@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <err.h>
+#include <string.h>
 #include "SDL/SDL.h"
 #include "SDL/SDL_image.h"
 #include "SDL/SDL_rotozoom.h"
@@ -49,6 +50,11 @@ typedef struct ProgressBar
 
 SDL_Surface* resize(SDL_Surface *img)
 {
+    /*double zoomx = (double)nw / (double)w;
+    double zoomy = (double)nh / (double)h;
+
+    img = zoomSurface(img, zoomx, zoomy, 0);*/
+    
     while (img->w > 740 || img->h > 700)
     {
         img = rotozoomSurface(img, 0, 0.9, 0);
@@ -92,8 +98,8 @@ void openfile(GtkButton *button, gpointer user_data)
     //g_print("Height = %i\n", app->image_surface->h);
     app->dis_img = resize(app->dis_img);
     SDL_SaveBMP(app->dis_img, "display.bmp");
-    //g_print("Weight = %i\n", app->image_surface->w);
-    //g_print("Height = %i\n", app->image_surface->h);
+    //g_print("Weight = %i\n", app->dis_img->w);
+    //g_print("Height = %i\n", app->dis_img->h);
     gtk_image_set_from_file(app->image.img, "display.bmp");
 }
 
@@ -155,6 +161,32 @@ void on_resolve(GtkButton *button, gpointer user_data)
     }
     else
     {
+	FILE* file = NULL;
+	file = fopen("is_training.txt", "r");
+	if (file != NULL)
+	{
+	    char *str = malloc(20 * sizeof(char));
+	    str = fgets(str, 20, file);
+	    fclose(file);
+	    if (atoi(str) == 0)
+	    {
+		GtkWidget* dialog;
+                GtkDialogFlags flags = GTK_DIALOG_DESTROY_WITH_PARENT;
+                dialog = gtk_message_dialog_new_with_markup(app->ui.window,
+                    flags,
+                    GTK_MESSAGE_WARNING,
+                    GTK_BUTTONS_CLOSE,
+                    "WARNING!\n\nThe network is not train.\n\nPlease, train the network before resolve.");
+
+                gtk_dialog_run(GTK_DIALOG(dialog));
+                g_signal_connect_swapped(dialog, "response",
+                    G_CALLBACK(gtk_widget_destroy),
+                    dialog);
+		free(str);
+		return;
+	    }
+	    free(str);
+	}
 	g_print("On peut résoudre\n");
     }
 }
