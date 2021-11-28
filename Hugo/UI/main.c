@@ -33,7 +33,7 @@ typedef struct Image
 typedef struct Application
 {
     gchar* filename;
-
+    int is_resolve;
     SDL_Surface* image_surface;
     SDL_Surface* dis_img;
     
@@ -101,6 +101,7 @@ void openfile(GtkButton *button, gpointer user_data)
     //g_print("Weight = %i\n", app->dis_img->w);
     //g_print("Height = %i\n", app->dis_img->h);
     gtk_image_set_from_file(app->image.img, "display.bmp");
+    app->is_resolve = 0;
 }
 
 void on_save(GtkButton *button, gpointer user_data)
@@ -129,7 +130,7 @@ void on_save(GtkButton *button, gpointer user_data)
             flags,
             GTK_MESSAGE_ERROR,
             GTK_BUTTONS_CLOSE,
-            "Error!\n\nNo image.\n\nPlease, resolve the sudoku before save.");
+            "Error!\n\nSudoku is not resolved.\n\nPlease, resolve the sudoku before save.");
 
         gtk_dialog_run(GTK_DIALOG(dialog));
         g_signal_connect_swapped(dialog, "response",
@@ -152,7 +153,7 @@ void on_save(GtkButton *button, gpointer user_data)
         {
             gchar* filename;
             filename = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
-            g_print("%s\n", filename)
+            g_print("%s\n", filename);
             //Image_Save_BMP("result.bmp", filename);
             break;
         }
@@ -228,6 +229,7 @@ void on_resolve(GtkButton *button, gpointer user_data)
 	    free(str);
 	}
 	g_print("On peut résoudre\n");
+	app->is_resolve = 1;
     }
 }
 
@@ -255,6 +257,15 @@ void on_network(GtkButton *button, gpointer user_data)
         gtk_dialog_run(pro_w);
         g_timeout_add(1000, (GSourceFunc)handle_progress, pro_bar);
     }
+
+    FILE* file = NULL;
+    file = fopen("is_training.txt", "w");
+    if (file != NULL)
+    {
+        fprintf(file, "1");
+    }
+
+    fclose(file);
 }
 
 gboolean Automatic(GtkWidget* widget, gpointer user_data)
@@ -451,6 +462,7 @@ int main (int argc, char *argv[])
     App app =
     {
         .filename = "",
+	.is_resolve = 0,
         .image_surface = NULL,
         .dis_img = NULL,
         .image = { .img = img },
