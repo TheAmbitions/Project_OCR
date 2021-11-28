@@ -108,7 +108,7 @@ void on_save(GtkButton *button, gpointer user_data)
     App* app = user_data;
     if (app->image_surface == NULL)
     {
-	GtkWidget* dialog;
+	    GtkWidget* dialog;
         GtkDialogFlags flags = GTK_DIALOG_DESTROY_WITH_PARENT;
         dialog = gtk_message_dialog_new_with_markup(app->ui.window,
             flags,
@@ -120,6 +120,46 @@ void on_save(GtkButton *button, gpointer user_data)
         g_signal_connect_swapped(dialog, "response",
             G_CALLBACK(gtk_widget_destroy),
             dialog);
+    }
+    else if (app->is_resolve == 0)
+    {
+        GtkWidget* dialog;
+        GtkDialogFlags flags = GTK_DIALOG_DESTROY_WITH_PARENT;
+        dialog = gtk_message_dialog_new_with_markup(app->ui.window,
+            flags,
+            GTK_MESSAGE_ERROR,
+            GTK_BUTTONS_CLOSE,
+            "Error!\n\nNo image.\n\nPlease, resolve the sudoku before save.");
+
+        gtk_dialog_run(GTK_DIALOG(dialog));
+        g_signal_connect_swapped(dialog, "response",
+            G_CALLBACK(gtk_widget_destroy),
+            dialog);
+    }
+    else
+    {
+        GtkWidget* dialog;
+        GtkWidget* toplevel = gtk_widget_get_toplevel(GTK_WIDGET(button));
+        dialog = gtk_file_chooser_dialog_new("Save Text ",
+            GTK_WINDOW(toplevel),
+            GTK_FILE_CHOOSER_ACTION_SAVE,
+            "Cancel", GTK_RESPONSE_CANCEL,
+            "Save", GTK_RESPONSE_ACCEPT,
+            NULL);
+        switch (gtk_dialog_run(GTK_DIALOG(dialog)))
+        {
+        case GTK_RESPONSE_ACCEPT:
+        {
+            gchar* filename;
+            filename = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
+            g_print("%s\n", filename)
+            //Image_Save_BMP("result.bmp", filename);
+            break;
+        }
+        default:
+            break;
+        }
+        gtk_widget_destroy(dialog);
     }
 }
 
