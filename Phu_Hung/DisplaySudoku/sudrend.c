@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <err.h>
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
@@ -43,7 +44,7 @@ void
 get_text_and_rect(SDL_Renderer *renderer,
     int x, int y,
     char *text, TTF_Font *font,
-    SDL_Texture **texture, SDL_Rect *rect)
+    SDL_Texture **texture, SDL_Rect *rect, SDL_Color textColor)
 {
     int text_width;
     int text_height;
@@ -55,7 +56,7 @@ get_text_and_rect(SDL_Renderer *renderer,
     SDL_Color textColor = { 237, 135, 45, 0 };
 #endif
 #if 1
-    SDL_Color textColor = { 255, 69, 0, 0 };
+    /*SDL_Color textColor = { 255, 69, 0, 0 };*/
 #endif
 
     surface = TTF_RenderText_Solid(font,text,textColor);
@@ -70,6 +71,39 @@ get_text_and_rect(SDL_Renderer *renderer,
     rect->y = y;
     rect->w = text_width;
     rect->h = text_height;
+}
+
+#define MAX_SIZE 12
+
+void initialisation_array(int grid[9][9])
+{
+    for (int i = 0; i < 9; i++)
+        for (int j = 0; j < 9; j++)
+            grid[i][j] = 0;
+}
+
+void input_sudoku(char path[], int grid[9][9])
+{
+    FILE* file = NULL;
+
+    file = fopen(path, "r");
+
+    if (file != NULL)
+    {
+        char str[MAX_SIZE] = "";
+
+        for (int i = 0; i < 9 && fgets(str, MAX_SIZE, file) != NULL; i++)
+            for (int j = 0; j < 9; j++)
+            {
+                if (str[j] >= 49 && str[j] <= 57)
+                    grid[i][j] = str[j] - 48;
+            }
+        
+
+        fclose(file);
+    }
+    else 
+        errx(1, "Error : the path does not exist");
 }
 
 // genboard -- generate sudoku board
@@ -125,7 +159,7 @@ drawgrid(SDL_Renderer *renderer)
     SDL_SetRenderDrawColor(renderer,143,188,143,0);
 #endif
 #if 1
-    SDL_SetRenderDrawColor(renderer,0,0,139,0);
+    SDL_SetRenderDrawColor(renderer,0,0,0,0);
 #endif
 
     gridmax = GRIDMAX;
@@ -153,7 +187,7 @@ drawbox(SDL_Renderer *renderer)
 #if 0
     SDL_SetRenderDrawColor(renderer, 255, 216, 0, 0);
 #else
-    SDL_SetRenderDrawColor(renderer,255,250,205,0);
+    SDL_SetRenderDrawColor(renderer,100,100,100,0);
 #endif
     gridmax = GRIDMAX / 3;
     boxmax = SUDYMAX * 3;
@@ -209,12 +243,13 @@ drawtext(SDL_Renderer *renderer)
             if (chr < 10)
             {
                 SDL_SetRenderDrawColor(renderer,0,0,0,0);
+                SDL_Color textcolor = {0,0,0,0};
                 if (chr != 0)
                     buf[0] = chr + '0';
                 else
                    buf[0] = ' ';
                 buf[1] = 0;
-                get_text_and_rect(renderer, 0, 0, buf, font, &texture, &trect);
+                get_text_and_rect(renderer, 0, 0, buf, font, &texture, &trect, textcolor);
 
                 int xbase = xbox * gridmax;
                 grect.x = xbase + gridmax / 3;
@@ -226,13 +261,13 @@ drawtext(SDL_Renderer *renderer)
             }
             else
             {
-                
+                SDL_Color textcolor = {0,50,243,0};
                 if (chr != 0)
                     buf[0] = chr + '0' - 10;
                 else
                     buf[0] = ' ';
                 buf[1] = 0;
-                get_text_and_rect(renderer, 0, 0, buf, font, &texture, &trect);
+                get_text_and_rect(renderer, 0, 0, buf, font, &texture, &trect, textcolor);
 
                 int xbase = xbox * gridmax;
                 grect.x = xbase + gridmax / 3;
@@ -363,9 +398,14 @@ main(int argc, char **argv)
                        { 1, 3, 0, 0, 0, 0, 2, 5, 0 },
                        { 0, 0, 0, 0, 0, 0, 0, 7, 4 },
                        { 0, 0, 5, 2, 0, 6, 3, 0, 0 } };
+
+    initialisation_array(grid);
+    initialisation_array(grid_res);
+
+    input_sudoku("sudoku_test.txt", grid);
+    input_sudoku("grid_result.txt", grid_res);
     genboard(grid, grid_res);
 
-    prtboard(brd);
     /* Inint TTF. */
     SDL_Init(SDL_INIT_TIMER | SDL_INIT_VIDEO);
     SDL_CreateWindowAndRenderer(WINDOW_WIDTH, WINDOW_WIDTH, 0, &window,
@@ -394,7 +434,7 @@ main(int argc, char **argv)
 #if 0
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
 #else
-        SDL_SetRenderDrawColor(renderer,135,206,250,0);
+        SDL_SetRenderDrawColor(renderer,255,255,255,0);
 #endif
         SDL_RenderClear(renderer);
 
