@@ -241,7 +241,7 @@ SDL_Surface* kernel (SDL_Surface* image_surface)
 
                 color = r -(r1/8 + r2/8 + r3/8 + r4/8 + r5/8 + r6/8 + r7/8 + r8/8);
 
-                if (color > 246)
+                if (color > 245)
                 {
                         put_pixel(destination, x, y, Whitepixel);
                 }
@@ -340,11 +340,12 @@ SDL_Surface* hough(SDL_Surface* img, SDL_Surface* dest)
     double a,m,x0,y0,x1,y1,x2,y2;
 	
 
+    search (lignes, 2*nb);
 
-    for (int i = 0; i < nb; i++)
+    for (int i = 0; i < nb*2; i += 2)
     {
-        rho = lignes[2 * i];
-        theta = lignes[2 * i + 1];
+        rho = lignes[i];
+        theta = lignes[i + 1];
         a = cos(theta);
         m = sin(theta);
         x0 = a * rho;
@@ -356,7 +357,6 @@ SDL_Surface* hough(SDL_Surface* img, SDL_Surface* dest)
        	dest = drawLine(dest,(int)x1, (int)y1, (int)x2,(int)y2);
         
     }
-    search (lignes, 2*nb);
     return dest;
 
 
