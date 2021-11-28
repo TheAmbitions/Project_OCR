@@ -5,6 +5,6 @@
 #include <stdlib.h>
 #include <math.h>
 
-void search (double l[], int len);
+int search (double l[], int len);
 
 #endif
