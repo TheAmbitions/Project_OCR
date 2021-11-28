@@ -340,9 +340,9 @@ SDL_Surface* hough(SDL_Surface* img, SDL_Surface* dest)
     double a,m,x0,y0,x1,y1,x2,y2;
 	
 
-    search (lignes, 2*nb);
+    int t =search (lignes, 2*nb);
 
-    for (int i = 0; i < nb*2; i += 2)
+    for (int i = 0; i < t*2; i += 2)
     {
         rho = lignes[i];
         theta = lignes[i + 1];

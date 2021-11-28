@@ -97,7 +97,7 @@ int gauss (double l[], int len, double eca, double moy)
 }
 
 
-void search (double l[], int len)
+int search (double l[], int len)
 {
     double moy = moyenne (l , len , 1, 2);
     printf("moyenne = %lf", moy);
@@ -140,15 +140,35 @@ void search (double l[], int len)
     double eca2 = ecart_type (l2, nb2 * 3, moy2);
 
       
-    gauss(l1,nb,eca1, moy1);
-    gauss(l2,nb2,eca2,moy2);
+    int t1 = gauss(l1,nb,eca1, moy1);
+    int t2 = gauss(l2,nb2,eca2,moy2);
     
     for (i = 0; i< nb *3; i += 3)
     {
         printf("    rho:  %lf\n    theta:%lf\n    use:  %lf\n\n",
         l1[i],l1[i+1],l1[i+2]);
     }
-    printf("fin de la liste 2\n\n");
+    j = 0;
+    for (i = 0; i< nb *3; i += 3)
+    {
+        if (l1[i +2]>1)
+        {
+            l[j] = l1[i];
+            l[j+1] = l1[i+1];
+            j +=2;
+        }
+    }
+    j = t1*2;
+    for (i = 0; i< nb2 *3; i +=3)
+    {
+        if(l2[i+2] >1)
+        {
+            l[j] = l2[i];
+            l[j+1] = l2[i+1];
+            j +=2;
+        }
+
+    }
 
     printf("CHANGEMENT DE LISTE\n\n");
     for (i = 0; i< nb2 *3; i += 3)
@@ -156,6 +176,7 @@ void search (double l[], int len)
         printf("    rho:  %lf\n    theta:%lf\n    use:  %lf\n\n", l2[i],l2[i+1],l2[i+2]);
     }
     printf("fin de la liste 2\n\n");
+    return t1 +t2;
 }   
 
 
