@@ -566,8 +566,6 @@ void ots(SDL_Surface* img)
     float v= E2 - (ut*ut);
     float ecart = sqrt(v);
 
-    printf("%f\n",ut);
-    printf("%f\n",ecart);
     if (ut > 197 && ut<205)
     {
         test(img,ecart);
@@ -676,7 +674,9 @@ int main(int argc,char *argv[])
  
  	update_surface(screen_surface, image_surface);
  	wait_for_keypressed();
- 		
+ 	
+    
+    Filter(image_surface);
     noiseReduction(image_surface);
 
 	update_surface(screen_surface, image_surface);
@@ -693,7 +693,7 @@ int main(int argc,char *argv[])
 	update_surface(screen_surface, image_surface);
 	wait_for_keypressed();
 	
-	
+    SDL_SaveBMP(image_surface,"hihihi.bmp");	
 	
 	//Free the image surface.
 	SDL_FreeSurface(image_surface);
