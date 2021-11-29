@@ -611,6 +611,142 @@ void ots(SDL_Surface* img)
 
 }
 
+void ot(SDL_Surface* img)
+{
+    int width = img -> w;
+	int height = img -> h;
+	Uint8 r,g,b;
+    int total = width * height;
+
+    int hist[256];
+    for (int i =0;i<256;i++)
+    {
+        hist[i]=0;
+    }
+
+    for (int i = 0; i<height;i++)
+    {
+        for (int j=0;j<width;j++)
+        {
+            Uint32 pixel = get_pixel(img, j, i);
+			SDL_GetRGB(pixel, img->format, &r ,&g,&b);
+            hist[r]+=1;
+
+        }
+    }
+
+  
+   float ut = 0;
+    float E2= 0;
+    float N = height*width;
+
+
+   
+    for (int i = 0;i<256;i++)
+    {
+
+        ut += i*(hist[i]/N);
+        E2 += i*i*(hist[i]/N); 
+    }
+
+
+    float v= E2 - (ut*ut);
+    float ecart = sqrt(v);
+
+
+    float sum = 0;
+    for (int t = 0; t<256;t++)
+    {
+        sum+=t * hist[t];
+    }
+
+    float sumB=0;
+    int wB=0;
+    int wF=0;
+
+    float varMax=0;
+    int threshold = 0;
+
+    for (int t =0;t<256;t++)
+    {
+        wB += hist[t];
+        if (wB==0)
+        {
+            continue;
+        }
+
+        wF = total - wB;
+        if (wF==0)
+        {
+            break;
+        }
+
+        sumB+= (float) (t*hist[t]);
+
+        float mB=sumB/wB;
+        float mF = (sum -sumB)/wF;
+
+        float varBetween = (float) wB * (float) wF * (mB -mF) * (mB-mF);
+
+        if (varBetween > varMax)
+        {
+            varMax = varBetween;
+            threshold = t;
+        
+        }
+     }
+
+        printf("%i\n",threshold);
+        printf("%f\n",ecart);
+        printf("%f\n",ut);
+
+        int alpha=0;
+        if (ecart > 55)
+        {
+            alpha = ut-threshold;
+        }
+        if (ut > 230)
+        {
+            alpha = - ecart;
+        }
+
+        for (int i = 0; i < height; i++)
+
+	    {
+
+		    for (int j = 0; j < width; j++)
+
+		    {
+
+                Uint32 pixel = get_pixel(img, j, i);
+			    SDL_GetRGB(pixel, img->format, &r ,&g,&b);
+
+                if (r < threshold - alpha)
+
+                {
+
+                    pixel = SDL_MapRGB(img ->format, 0, 0, 0);
+                    put_pixel(img,j,i,pixel);
+
+                }
+
+                else
+
+                {
+
+                    pixel = SDL_MapRGB(img->format, 255, 255, 255);
+                    put_pixel(img,j,i,pixel);
+
+                }
+
+		    }
+        }
+    
+        
+}
+
+
+
 
 void SDL_ExitWithError(const char *message);
 
@@ -677,7 +813,9 @@ int main(int argc,char *argv[])
  	
     
     Filter(image_surface);
+
     noiseReduction(image_surface);
+
 
 	update_surface(screen_surface, image_surface);
 
@@ -685,7 +823,8 @@ int main(int argc,char *argv[])
 	wait_for_keypressed();
 	
 	//otsu(image_surface,seuil);
-    ots(image_surface);
+    //ots(image_surface);
+    ot(image_surface);
 	
     //image_surface = Filter(image_surface);
 
