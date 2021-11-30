@@ -304,8 +304,8 @@
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkCheckButton" id="Noise">
-                        <property name="label" translatable="yes">	Noise suppression</property>
+                      <object class="GtkCheckButton" id="bw">
+                        <property name="label" translatable="yes">	Black and White</property>
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="receives_default">False</property>
@@ -317,8 +317,8 @@
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkCheckButton" id="bw">
-                        <property name="label" translatable="yes">	Black and White</property>
+                      <object class="GtkCheckButton" id="Grid">
+                        <property name="label" translatable="yes">	Grid detection</property>
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="receives_default">False</property>
@@ -330,8 +330,8 @@
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkCheckButton" id="Grid">
-                        <property name="label" translatable="yes">	Grid detection</property>
+                      <object class="GtkCheckButton" id="IA">
+                        <property name="label" translatable="yes">	Recognition</property>
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="receives_default">False</property>

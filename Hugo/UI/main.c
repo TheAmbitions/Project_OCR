@@ -9,6 +9,7 @@
 
 #include "display.h"
 #include "rotations.h"
+#include "otsu.h"
 
 typedef struct UserInterface
 {
@@ -20,7 +21,7 @@ typedef struct UserInterface
     GtkSpinButton *Rotation;
     GtkCheckButton *Auto;
     GtkCheckButton *Manual;
-    GtkCheckButton *Noise;
+    GtkCheckButton *IA;
     GtkCheckButton *bw;
     GtkCheckButton *Grid;
 }UserInterface;
@@ -28,6 +29,8 @@ typedef struct UserInterface
 typedef struct Image
 {
     GtkImage *img;
+    SDL_Surface *rot_img;
+    SDL_Surface *otsu_img;
 }Image;
 
 typedef struct Application
@@ -85,23 +88,23 @@ void openfile(GtkButton *button, gpointer user_data)
     case GTK_RESPONSE_ACCEPT:
     {
         app->filename = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
+	app->image_surface = load_image(app->filename);
+        app->dis_img = load_image(app->filename);
+        //g_print("Weight = %i\n", app->image_surface->w);
+        //g_print("Height = %i\n", app->image_surface->h);
+        app->dis_img = resize(app->dis_img);
+        SDL_SaveBMP(app->dis_img, "display.bmp");
+        //g_print("Weight = %i\n", app->dis_img->w);
+        //g_print("Height = %i\n", app->dis_img->h);
+        gtk_image_set_from_file(app->image.img, "display.bmp");
+        app->is_resolve = 0;
+	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(app->ui.bw), FALSE);
         break;
     }
     default:
         break;
     }
     gtk_widget_destroy(dialog);
-
-    app->image_surface = load_image(app->filename);
-    app->dis_img = load_image(app->filename);
-    //g_print("Weight = %i\n", app->image_surface->w);
-    //g_print("Height = %i\n", app->image_surface->h);
-    app->dis_img = resize(app->dis_img);
-    SDL_SaveBMP(app->dis_img, "display.bmp");
-    //g_print("Weight = %i\n", app->dis_img->w);
-    //g_print("Height = %i\n", app->dis_img->h);
-    gtk_image_set_from_file(app->image.img, "display.bmp");
-    app->is_resolve = 0;
 }
 
 void on_save(GtkButton *button, gpointer user_data)
@@ -183,7 +186,7 @@ void on_resolve(GtkButton *button, gpointer user_data)
             dialog);
     }
     else if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(app->ui.Manual))
-		&& (!gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(app->ui.Noise))
+		&& (!gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(app->ui.IA))
 		|| !gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(app->ui.bw))
 		|| !gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(app->ui.Grid))))
     {
@@ -283,10 +286,10 @@ gboolean Automatic(GtkWidget* widget, gpointer user_data)
         gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(app->ui.Manual), FALSE);
 
         gtk_widget_set_sensitive(GTK_WIDGET(app->ui.Rotation), FALSE);
-        gtk_widget_set_sensitive(GTK_WIDGET(app->ui.Noise), FALSE);
+        gtk_widget_set_sensitive(GTK_WIDGET(app->ui.IA), FALSE);
         gtk_widget_set_sensitive(GTK_WIDGET(app->ui.bw), FALSE);
         gtk_widget_set_sensitive(GTK_WIDGET(app->ui.Grid), FALSE);
-        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(app->ui.Noise), FALSE);
+        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(app->ui.IA), FALSE);
 	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(app->ui.bw), FALSE);
 	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(app->ui.Grid), FALSE);
 
@@ -310,7 +313,7 @@ gboolean Manu(GtkWidget* widget, gpointer user_data)
         gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(app->ui.Auto), FALSE);
 
         gtk_widget_set_sensitive(GTK_WIDGET(app->ui.Rotation), TRUE);
-        gtk_widget_set_sensitive(GTK_WIDGET(app->ui.Noise), TRUE);
+        gtk_widget_set_sensitive(GTK_WIDGET(app->ui.bw), TRUE);
         //gtk_widget_set_sensitive(GTK_WIDGET(app->ui.bw), TRUE);
         //gtk_widget_set_sensitive(GTK_WIDGET(app->ui.Grid), TRUE);
 
@@ -342,15 +345,36 @@ gboolean value_changed(GtkWidget* widget, gpointer user_data)
 
     //apply_rotation(&(app->dis_img),
     //    gtk_spin_button_get_value_as_int(GTK_SPIN_BUTTON(app->ui.Rotation)));
-    app->dis_img = rotozoomSurface(app->dis_img, 
+    app->image_surface = rotozoomSurface(app->image_surface, 
 	gtk_spin_button_get_value_as_int(GTK_SPIN_BUTTON(app->ui.Rotation)),
 	1, 1);
-    SDL_SaveBMP(app->dis_img, "display.bmp");
-    gtk_image_set_from_file(app->image.img, "display.bmp");
+    SDL_SaveBMP(app->image_surface, "tmp_img/rotation.bmp");
+    app->image.rot_img = load_image("tmp_img/rotation.bmp");
+    app->image.rot_img = resize(app->image.rot_img);
+    SDL_SaveBMP(app->image.rot_img, "tmp_img/rotation.bmp");
+    gtk_image_set_from_file(app->image.img, "tmp_img/rotation.bmp");
     return 0;
 }
 
-gboolean NoiseReduc(GtkWidget* widget, gpointer user_data)
+gboolean IA_recognition(GtkWidget* widget, gpointer user_data)
+{
+    App* app = user_data;
+
+    if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(app->ui.IA)) == TRUE)
+    {
+        g_print("ok\n");
+        return 0;
+    }
+    else if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(app->ui.IA)) == FALSE)
+    {
+	g_print("ok2\n");
+        return 0;
+    }
+
+    return 0;
+}
+
+gboolean BlackWhite(GtkWidget* widget, gpointer user_data)
 {
     App* app = user_data;
     if (app->image_surface == NULL)
@@ -361,43 +385,24 @@ gboolean NoiseReduc(GtkWidget* widget, gpointer user_data)
             flags,
             GTK_MESSAGE_ERROR,
             GTK_BUTTONS_CLOSE,
-            "Error!\n\nNo image.\n\nPlease, load an image before reduce noise.");
+            "Error!\n\nNo image.\n\nPlease, load an image before grayscale.");
 
         gtk_dialog_run(GTK_DIALOG(dialog));
         g_signal_connect_swapped(dialog, "response",
             G_CALLBACK(gtk_widget_destroy),
             dialog);
-        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(app->ui.Noise), FALSE);
 	return 0;
     }
-
-    if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(app->ui.Noise)) == TRUE)
-    {
-        gtk_widget_set_sensitive(GTK_WIDGET(app->ui.bw), TRUE);
-        return 0;
-    }
-
-    if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(app->ui.Noise)) == FALSE)
-    {
-	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(app->ui.bw), FALSE);
-	gtk_widget_set_sensitive(GTK_WIDGET(app->ui.bw), FALSE);
-        return 0;
-    }
-
-    return 0;
-}
-
-gboolean BlackWhite(GtkWidget* widget, gpointer user_data)
-{
-    App* app = user_data;
 
     if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(app->ui.bw)) == TRUE)
     {
 	gtk_widget_set_sensitive(GTK_WIDGET(app->ui.Grid), TRUE);
+	apply_otsu(&(app->image_surface));
+	SDL_SaveBMP(app->image_surface, "tmp_img/otsu.bmp");
+        gtk_image_set_from_file(app->image.img, "tmp_img/otsu.bmp");
         return 0;
     }
-
-    if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(app->ui.bw)) == FALSE)
+    else if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(app->ui.bw)) == FALSE)
     {
 	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(app->ui.Grid), FALSE);
 	gtk_widget_set_sensitive(GTK_WIDGET(app->ui.Grid), FALSE);
@@ -413,13 +418,13 @@ gboolean GridDetec(GtkWidget* widget, gpointer user_data)
 
     if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(app->ui.Grid)) == TRUE)
     {
-        g_print("Grid \n");
+        gtk_widget_set_sensitive(GTK_WIDGET(app->ui.IA), TRUE);
         return 0;
     }
-
-    if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(app->ui.Noise)) == FALSE)
+    else if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(app->ui.Grid)) == FALSE)
     {
-        g_print("Not Grid \n");
+        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(app->ui.IA), FALSE);
+        gtk_widget_set_sensitive(GTK_WIDGET(app->ui.IA), FALSE);
         return 0;
     }
 
@@ -454,7 +459,7 @@ int main (int argc, char *argv[])
     GtkCheckButton* Auto = GTK_CHECK_BUTTON(gtk_builder_get_object(builder, "Auto"));
     GtkCheckButton* Manual = GTK_CHECK_BUTTON(gtk_builder_get_object(builder, "Manual"));
     GtkSpinButton* Rotation = GTK_SPIN_BUTTON(gtk_builder_get_object(builder, "Rotation"));
-    GtkCheckButton* Noise = GTK_CHECK_BUTTON(gtk_builder_get_object(builder, "Noise"));
+    GtkCheckButton* IA = GTK_CHECK_BUTTON(gtk_builder_get_object(builder, "IA"));
     GtkCheckButton* bw = GTK_CHECK_BUTTON(gtk_builder_get_object(builder, "bw"));
     GtkCheckButton* Grid = GTK_CHECK_BUTTON(gtk_builder_get_object(builder, "Grid"));
     GtkImage *img = GTK_IMAGE(gtk_builder_get_object(builder, "img_sud"));
@@ -465,7 +470,12 @@ int main (int argc, char *argv[])
 	.is_resolve = 0,
         .image_surface = NULL,
         .dis_img = NULL,
-        .image = { .img = img },
+        .image = 
+	{ 
+	    .img = img,
+	    .rot_img = NULL,
+	    .otsu_img = NULL,
+	},
         .ui =
         {
             .window = window,
@@ -476,7 +486,7 @@ int main (int argc, char *argv[])
             .Rotation = Rotation,
             .Auto = Auto,
             .Manual = Manual,
-            .Noise = Noise,
+            .IA = IA,
             .bw = bw,
             .Grid = Grid,
         }
@@ -487,7 +497,7 @@ int main (int argc, char *argv[])
     Auto = GTK_CHECK_BUTTON(gtk_builder_get_object(builder, "Auto"));
 
     gtk_widget_set_sensitive(GTK_WIDGET(Rotation), FALSE);
-    gtk_widget_set_sensitive(GTK_WIDGET(Noise), FALSE);
+    gtk_widget_set_sensitive(GTK_WIDGET(IA), FALSE);
     gtk_widget_set_sensitive(GTK_WIDGET(bw), FALSE);
     gtk_widget_set_sensitive(GTK_WIDGET(Grid), FALSE);
 
@@ -500,7 +510,7 @@ int main (int argc, char *argv[])
     g_signal_connect(Manual, "clicked", G_CALLBACK(Manu), &app);
     g_signal_connect(Auto, "clicked", G_CALLBACK(Automatic), &app);
     g_signal_connect(Rotation, "value-changed", G_CALLBACK(value_changed), &app);
-    g_signal_connect(Noise, "clicked", G_CALLBACK(NoiseReduc), &app);
+    g_signal_connect(IA, "clicked", G_CALLBACK(IA_recognition), &app);
     g_signal_connect(bw, "clicked", G_CALLBACK(BlackWhite), &app);
     g_signal_connect(Grid, "clicked", G_CALLBACK(GridDetec), &app);
 
@@ -509,6 +519,8 @@ int main (int argc, char *argv[])
 
     SDL_FreeSurface(app.image_surface);
     SDL_FreeSurface(app.dis_img);
+    SDL_FreeSurface(app.image.otsu_img);
+    SDL_FreeSurface(app.image.rot_img);
 
     // Exits.
     return 0;
