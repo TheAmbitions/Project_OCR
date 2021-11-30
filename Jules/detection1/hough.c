@@ -6,6 +6,7 @@
 #include "SDL/SDL_image.h"
 #include "pixel_operations.h"
 #include "detection.h"
+#include "otsu.h"
 
 #include "display.h"
 
@@ -241,7 +242,7 @@ SDL_Surface* kernel (SDL_Surface* image_surface)
 
                 color = r -(r1/8 + r2/8 + r3/8 + r4/8 + r5/8 + r6/8 + r7/8 + r8/8);
 
-                if (color > 245)
+                if (color > 95)
                 {
                         put_pixel(destination, x, y, Whitepixel);
                 }
@@ -259,11 +260,11 @@ SDL_Surface* kernel (SDL_Surface* image_surface)
 
 #define PI 3.1415927
 
-void SDL_ExitWithError(const char *message);
 
-SDL_Surface* hough(SDL_Surface* img, SDL_Surface* dest)
+SDL_Surface* hough(SDL_Surface* img, SDL_Surface* dest, int seuil, double
+accum[], double accum_seuil[])
 {
-
+    printf("START HOUGH\n");
     Uint32 pixel;
     Uint8 r,g,b;
 
@@ -276,9 +277,12 @@ SDL_Surface* hough(SDL_Surface* img, SDL_Surface* dest)
     double Nrho = floor( sqrt(width * width + height * height))/rho;
     double dtheta = PI / Ntheta;
     double drho = floor(sqrt(width * width + height * height))/Nrho;
-    double accum[(int) (Ntheta * Nrho)];
+    printf("avant crash due to -> %i\n",(int) (Ntheta * Nrho));
+    //double accum[(int) (Ntheta * Nrho)];
+    printf("test\n");
+
     double i_rho;
-    int seuil = 130;
+    printf ("seuil = %i\n",seuil);
 
     for (double i = 0; i < Ntheta * Nrho; i++)
         accum[(int) i] = 0;
@@ -302,8 +306,9 @@ SDL_Surface* hough(SDL_Surface* img, SDL_Surface* dest)
             }
         }
     }
+    printf("Fin boucle 1\n");
     int nb = 0;
-    double accum_seuil[(int) (Ntheta * Nrho)];
+    //double accum_seuil[(int) (Ntheta * Nrho)];
     for (double i = 0; i < Ntheta * Nrho; i++)
         accum_seuil[(int)i] = accum[(int)i];
     
@@ -320,7 +325,8 @@ SDL_Surface* hough(SDL_Surface* img, SDL_Surface* dest)
 
         }
     }
-    
+    printf("Fin boucle 2\n");
+
     double lignes[nb*2];
     int i = 0;
 
@@ -336,28 +342,38 @@ SDL_Surface* hough(SDL_Surface* img, SDL_Surface* dest)
             }
         }
     }
+    printf("Fin boucle 3\n");
+
 
     double a,m,x0,y0,x1,y1,x2,y2;
 	
-
-    int t =search (lignes, 2*nb);
-
-    for (int i = 0; i < t*2; i += 2)
+    printf("nb ligne = %i\n", i);
+    if (i<65)
     {
-        rho = lignes[i];
-        theta = lignes[i + 1];
-        a = cos(theta);
-        m = sin(theta);
-        x0 = a * rho;
-        y0 = m * rho;
-        x1  = (x0 + 1000 * (-m));
-        y1 = (y0 + 1000 * (a));
-        x2 = (x0 - 1000 *(-m));
-        y2 = (y0 - 1000 * (a));
-       	dest = drawLine(dest,(int)x1, (int)y1, (int)x2,(int)y2);
-        
+        int t = search(lignes, 2*nb);
+        for (int i = 0; i < t; i += 2)
+        {
+            //printf("draw\n");
+            rho = lignes[i];
+            theta = lignes[i + 1];
+            a = cos(theta);
+            m = sin(theta);
+            x0 = a * rho;
+            y0 = m * rho;
+            x1  = (x0 + 1000 * (-m));
+            y1 = (y0 + 1000 * (a));
+            x2 = (x0 - 1000 *(-m));
+            y2 = (y0 - 1000 * (a));
+       	    dest = drawLine(dest,(int)x1, (int)y1, (int)x2,(int)y2);    
+        }
+        return dest;
     }
-    return dest;
+
+    else
+    {
+        printf("seuil too hight\n\n");
+        return hough(img,dest,seuil +5,accum, accum_seuil);
+    }
 
 
         
@@ -404,8 +420,10 @@ int main(int argc,char *argv[])
 		}
   	}
  	
-	image_traite = Filter(image_surface);
-	
+	//image_traite = Filter(image_surface);
+	otsu(image_traite);
+	screen_surface =  display_image(image_traite);
+	wait_for_keypressed();
 	//image_surface = sobel(image_surface);
 	image_traite = kernel(image_traite);
 	screen_surface =  display_image(image_traite);
@@ -414,9 +432,15 @@ int main(int argc,char *argv[])
 	//update_surface(screen_surface, image_surface);
 	//wait_for_keypressed();
     printf("avant hough\n\n\n");
-	image_surface = hough(image_traite, image_surface);
+    double accum[(int)floor(sqrt(image_traite->w*image_traite->w +
+    image_traite->h*image_traite->h)) * 180];
+    double accum_seuil[(int)floor(sqrt(image_traite->w*image_traite->w +
+    image_traite->h*image_traite->h)) * 180];
+
+    image_surface = hough(image_traite, image_traite,200, accum, accum_seuil);
     printf("apres hough\n\n");
-	update_surface(screen_surface, image_surface);
+    SDL_SaveBMP(image_traite, "hihi.bmp");
+	update_surface(screen_surface, image_traite);
 	
 	//update_surface(screen_surface, image_surface);
 	wait_for_keypressed();
