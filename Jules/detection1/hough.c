@@ -242,7 +242,7 @@ SDL_Surface* kernel (SDL_Surface* image_surface)
 
                 color = r -(r1/8 + r2/8 + r3/8 + r4/8 + r5/8 + r6/8 + r7/8 + r8/8);
 
-                if (color > 95)
+                if (color > 75)
                 {
                         put_pixel(destination, x, y, Whitepixel);
                 }
@@ -348,10 +348,11 @@ accum[], double accum_seuil[])
     double a,m,x0,y0,x1,y1,x2,y2;
 	
     printf("nb ligne = %i\n", i);
-    if (i<65)
+    if (i<100)
     {
         int t = search(lignes, 2*nb);
         for (int i = 0; i < t; i += 2)
+        //for (int i = 0; i < nb*2; i += 2)
         {
             //printf("draw\n");
             rho = lignes[i];
@@ -421,7 +422,8 @@ int main(int argc,char *argv[])
   	}
  	
 	//image_traite = Filter(image_surface);
-	otsu(image_traite);
+	//otsu(image_traite);
+    ots(image_traite);
 	screen_surface =  display_image(image_traite);
 	wait_for_keypressed();
 	//image_surface = sobel(image_surface);
@@ -437,7 +439,7 @@ int main(int argc,char *argv[])
     double accum_seuil[(int)floor(sqrt(image_traite->w*image_traite->w +
     image_traite->h*image_traite->h)) * 180];
 
-    image_surface = hough(image_traite, image_traite,200, accum, accum_seuil);
+    image_surface = hough(image_traite, image_traite,130, accum, accum_seuil);
     printf("apres hough\n\n");
     SDL_SaveBMP(image_traite, "hihi.bmp");
 	update_surface(screen_surface, image_traite);
