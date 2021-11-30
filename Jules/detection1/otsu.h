@@ -9,6 +9,7 @@
 #include "SDL/SDL_image.h"
 #include "pixel_operations.h"
 
+void ots (SDL_Surface* img);
 void otsu (SDL_Surface* img);
 
 #endif

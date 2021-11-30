@@ -150,6 +150,126 @@ void noiseReduction(SDL_Surface *img)
  }
 }
 
+void test(SDL_Surface *img,int ecart)
+{
+    int h = img->h;
+    int w = img->w ;
+    int r = 0;
+    int T = h*w;
+	Uint8 rt, gt, bt;
+
+    for (int i =0; i< h ;i++)
+    {
+        for (int j= 0;j<h ; j++)
+        {
+
+            unsigned pixel = get_pixel(img, j, i);
+			SDL_GetRGB(pixel, img->format, &rt, &gt, &bt);
+			r += rt;
+        }
+    }
+
+   int avg = r /T;
+
+    for (int i =0; i <h;i++)
+    {
+        for (int j=0; j<w;j++)
+        {
+            unsigned pixel = get_pixel(img,j,i);
+            SDL_GetRGB(pixel,img->format,&rt,&gt,&bt);
+            if (rt < avg + ecart)
+            {
+                pixel = SDL_MapRGB(img->format, 0,0,0);
+                put_pixel(img,j,i,pixel);
+            }
+        }
+    }
+}
+
+void ots(SDL_Surface* img)
+{
+    int width = img -> w;
+	int height = img -> h;
+	Uint8 r,g,b;
+
+    int hist[256];
+    for (int i =0;i<256;i++)
+    {
+        hist[i]=0;
+    }
+
+    for (int i = 0; i<height;i++)
+    {
+        for (int j=0;j<width;j++)
+        {
+            Uint32 pixel = get_pixel(img, j, i);
+			SDL_GetRGB(pixel, img->format, &r ,&g,&b);
+            hist[r]+=1;
+
+        }
+    }
+
+    float ut = 0;
+    float E2= 0;
+    float N = height*width;
+
+
+   
+    for (int i = 0;i<256;i++)
+    {
+
+        ut += i*(hist[i]/N);
+        E2 += i*i*(hist[i]/N); 
+    }
+
+
+    float v= E2 - (ut*ut);
+    float ecart = sqrt(v);
+
+    if (ut > 197 && ut<205)
+    {
+        test(img,ecart);
+    }
+    if (ecart<60 && ecart>50)
+    {
+        ut-=20;
+    }
+
+    for (int i = 0; i < height; i++)
+
+	{
+
+		for (int j = 0; j < width; j++)
+
+		{
+
+            Uint32 pixel = get_pixel(img, j, i);
+			SDL_GetRGB(pixel, img->format, &r ,&g,&b);
+
+			if (r + ecart < ut)
+
+			{
+
+				pixel = SDL_MapRGB(img ->format, 0, 0, 0);
+				put_pixel(img,j,i,pixel);
+
+			}
+
+			else
+
+			{
+
+				pixel = SDL_MapRGB(img->format, 255, 255, 255);
+				put_pixel(img,j,i,pixel);
+
+			}
+
+		}
+
+	}
+
+
+}
 
  
 void otsu(SDL_Surface* img)

@@ -6,53 +6,6 @@
 
 #define PI 3.1415927
 
-int max_rho(double l[], int t)
-{
-    double max = -1;
-    int m = -1;
-    int i = 2;
-    int j = 0;
-    while (j<t)
-    {
-        if (l[i] > 1)
-        {
-            if (max == -1 || l[i-2] >= max)
-            {
-                max = l[i-2];
-                 printf("new max = %lf, theta = %lf\n",max, l[i-1]); 
-                m = i-2;
-            }
-            j +=1 ;
-        }
-        i += 3;
-    }
-    return m;
-}
-
-int min_rho(double l[], int t)
-{
-    double max = -1;
-    int m = -1;
-    int i = 2;
-    int j = 0;
-    while (j<t)
-    {
-        if (l[i] > 1)
-        {
-            if (max == -1 || l[i-2] <= max)
-            { 
-                max = l[i-2];
-                printf("new min = %lf, theta = %lf\n",max,l[i-1]); 
-                m = i-2;
-            }
-            printf("%i\n",j);
-            j +=1 ;
-        }
-        i += 3;
-    }
-    return m;
-}
-
 
 
 double abss(double n)
@@ -103,133 +56,152 @@ int gauss (double l[], int len, double eca, double moy)
             if (abss(moy - l[i -1]) <= f * eca)
             {
                 l[i] = 2;
-		//printf("    rho:  %lf\n    theta:%lf\n    use:  %lf\n\n", l[i-2],l[i-1],l[i]);
+	//	printf("    rho:  %lf\n    theta:%lf\n    use:  %lf\n\n", l[i-2],l[i-1],l[i]);
                 t += 1;
             }
         }
         f += 0.5;
     }
-    /*double new[3*t];
-    int j = 2;
-    i = 2;
-    while ( j <3*t)
-    {
-        if (l[i] == 2)
-        {
-            new[j] = 1;
-            new[j-1] = l[i-1];
-            new[j-2] = l[i-2];
-            j +=3;
-        }
-        i += 3;
-    }
-    l = new;
-    double tmp1,tmp2;
-    for (i = 4; i<3*t; i+=2)
-    {
-        tmp1 = l[i] -1;
-        tmp2 = l[i];
-        j = i-3;
-        while (tmp2 < l[j] && j > 1)
-        {
-            l[j+3] = l[j];
-            l[j+2] = l[j-1];
-            j -=3;
-        }
-        l[j+3] = tmp2;
-        l[j+2] = tmp1;
-
-    }*/
     return t;
 }
 
-
-double med (double l[], int len,int t)
+int env(double a, double b)
 {
-    printf("len = %i  t = %i \n",len,t);
-    int m = t/2;
-    double rh1 = 0;
-    double th1 = 0;
-    double rh2 = 0;
-    double th2 = 0;
-
-    int i,j;
-    j = 0;
-    i = 2;
-    while (i < len*3 && j < t)
-    {
-        printf("j = %i  med = %i  theta = %lf  use = %lf\n",j,m,l[i-1],l[i]);
-        if (l[i] == 2)
-        {
-            if (j >= m)
-            {
-                rh2 += l[i-2];
-                th2 += l[i-1];
-                l[i] = 3;
-            }
-            else
-            {
-                rh1 += l[i-2];
-                th1 += l[i-1];
-            }
-            j+=1;
-            
-        }
-        i += 3;
-    }
-    rh1 = rh1 /m;
-    th1 = th1 /m;
-    rh2 = rh2 /(t-m);
-    th2 = th2 /(t-m);
-    return (rh2-rh1)/(th2-th1);
+    if (abss(a-b)<15)
+        return 1;
+    return 0;
 }
 
-void selection (double l[], double coef, int t)
+int ecar (double l[], int t)
 {
-    printf("test1\n");
-    int i = 2;
-    int j = 0;
-    int k = t;
+    double ecart[2*t];
+    int i;
+    for (i = 0; i<2*t; i+=1)
+    {
+        ecart[i] = 0;
+    }
+    double prev = 0;
+    i = 2;
+    int f;
     double eca = 0;
+    int j =0;
+    int k;
+    int t2 = t;
     while (j<t)
     {
         if (l[i] > 1)
         {
-            if (abss(l[i-2] - coef * l[i-1])> eca)
-                eca = abss(l[i-2] - coef * l[i-1]);
-            j+=1;
-        }
-        i +=3;
-    }
-    printf("test2\n");
-    double marge = eca/1000;
-
-    while (k>10 && t >0)
-    {
-        j = 0;
-        i = 2;
-        eca = eca - marge;
-        while (j<t)
-        {
-            if (l[i] > 1)
+            if (prev != 0)
             {
-                if (abss(l[i-2] - coef * l[i-1])> eca)
+                eca += abss(l[i-2]-prev);
+                if (eca > 15)
+                {
+                    f = 0;
+                    k = 0;
+                    while (k<2*t && f == 0)
+                    {
+                        if (ecart[k] == 0)
+                        {
+                            ecart[k] = eca;
+                            ecart[k+1] = 1;
+                            f = 1;
+                        }
+                        else
+                        {
+                            if (env(eca, ecart[k]) == 1)
+                            {
+                                ecart[k] = (ecart[k] * ecart[k+1] +
+                                eca)/(ecart[k+1] + 1);
+                                ecart[k+1] += 1;
+                                f = 1;
+                            }
+                        }
+                        k += 2;
+                    }
+                    eca = 0;
+                }
+                else
                 {
                     l[i] = 0;
-                    k -= 1;
+                    t2 -= 1;
                 }
-                
-                j += 1;
             }
-            i += 3;
+            prev = l[i-2];
+            j += 1;
         }
-        t -= 1;
+        i += 3;
     }
-    printf("test3\n");
+    
+    prev = 0;
+    i = 1;
+    while (i<t*2 && ecart[i] != 0)
+    {
+        if (ecart[i] > prev)
+        {
+            eca = ecart[i-1];
+            prev = ecart[i];
+        }
+        i += 2;
+    }
+
+    prev = 0;
+    f = 2;
+    k = 1;
+    i = 2;
+    j = 0;
+    while (j < t2 && k < 10)
+    {
+        if (l[i] > 1)
+        {
+            printf("rho = %lf\n",l[i-2]); 
+            j += 1;
+            if (prev != 0)
+            {
+                if (env(abss(l[i-2]-prev),eca)==1)
+                {
+                    k += 1;
+                    l[f] = 4;
+                    l[i] = 4;
+                    printf("rho = %lf\n",l[i-2]);
+                }
+            }
+            f = i; 
+            prev = l[i-2];
+        }
+        i += 3;
+    }
+    printf("k = %i\n\n",k);
+    return k;
 }
 
+void fin (double l[], int t)
+{
+    int i = 2;
+    int j = 0;
+    while (j < t)
+    { 
+        if (l[i] == 4)
+        {
+            j += 1;
+            if (j == 1)
+            {
+                l[0] = l[i-2];
+                l[1] = l[i -1];
+            }
+            else
+            {
+                if (j == t)
+                {
+                    l[2] = l[i - 2];
+                    l[3] = l[i - 1];
+                }
+            }
+        }
+        i += 3;
+    }
+}
 
-void search (double l[], int len)
+int search (double l[], int len)
 {
     double moy = moyenne (l , len , 1, 2);
     printf("moyenne = %lf", moy);
@@ -274,65 +246,55 @@ void search (double l[], int len)
       
     int t1 = gauss(l1,nb,eca1, moy1);
     int t2 = gauss(l2,nb2,eca2,moy2);
-    double m1,m2;
-    if (t1 > 0 && t2 > 0)
+
+    t1 = ecar(l1,t1);
+    t2 = ecar(l2, t2);
+    
+    fin(l1,t1);
+    fin(l2,t2);
+
+    l[0]=l1[0];
+    l[1]=l1[1];
+    l[2]=l1[2];
+    l[3]=l1[3];
+    l[4]=l2[0];
+    l[5]=l2[1];
+    l[6]=l2[2];
+    l[7]=l2[3];
+
+    /*for (i = 0; i< nb *3; i += 3)
     {
-        m1 = med(l1,nb,t1);
-        m2 = med(l2,nb2,t2);
-        selection(l1,m1,t1);
-        selection(l2,m2,t2);
+        printf("    rho:  %lf\n    theta:%lf\n    use:  %lf\n\n",
+        l1[i],l1[i+1],l1[i+2]);
+    }
+    j = 0;
+    for (i = 0; i< nb *3; i += 3)
+    {
+        if (l1[i +2]>1)
+        {
+            l[j] = l1[i];
+            l[j+1] = l1[i+1];
+            j +=2;
+        }
+    }
+    j = t1*2;
+    for (i = 0; i< nb2 *3; i +=3)
+    {
+        if(l2[i+2] >1)
+        {
+            l[j] = l2[i];
+            l[j+1] = l2[i+1];
+            j +=2;
+        }
+
     }
 
-    i = min_rho(l1,t1);
-    l[0] = l1[i];
-    l[1] = l1[i+1];
-    i = max_rho (l1,t1);
-    l[2] = l1[i];
-    l[3] = l1[i+1];
-    i = min_rho(l2,t2);
-    l[4] = l2[i];
-    l[5] = l2[i+1];
-    i = max_rho (l2,t2);
-    l[6] = l2[i];
-    l[7] = l2[i+1];
-
-    printf(" rho = %lf  theta = %lf\n",l[0],l[1]);
-    printf(" rho = %lf  theta = %lf\n",l[2],l[3]);
-    printf(" rho = %lf  theta = %lf\n",l[4],l[5]);
-    printf(" rho = %lf  theta = %lf\n",l[6],l[7]);
-
-
-    for (i = 0; i<nb *3; i+=3)
-        
-    {
-        printf("    rho:  %lf\n    theta:%lf\n    use:  %lf\n\n", l1[i],l1[i+1],l1[i+2]);
-    }
     printf("CHANGEMENT DE LISTE\n\n");
     for (i = 0; i< nb2 *3; i += 3)
     {
         printf("    rho:  %lf\n    theta:%lf\n    use:  %lf\n\n", l2[i],l2[i+1],l2[i+2]);
     }
-    printf("fin de la liste 2\n\n");
+    printf("fin de la liste 2\n\n");*/
+    return 8;
 }   
 
-
-/*int main()
-{
-    double k = 0;
-    double l[60];
-    for (int i = 0; i < 34;i+= 2)
-    {
-        l[i] = k;
-        k += 100;
-        l[i+1] = 0;
-    }
-    k = 0;
-    for (int i = 34; i< 60; i += 2)
-    {
-        l[i] = k;
-        l[i + 1] = PI/2;
-        k += 100;
-    }
-    search(l,60);
-    return 1;
-}*/
