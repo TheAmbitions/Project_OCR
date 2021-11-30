@@ -1,6 +1,6 @@
 # Simple SDL mini Makefile
 
-CC=gcc -fsanitize=address
+CC=gcc
 
 CPPFLAGS= `pkg-config --cflags sdl` -MMD 
 CFLAGS= -Wall -Wextra -Werror -std=c99 -O3

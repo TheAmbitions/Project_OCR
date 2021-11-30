@@ -798,6 +798,9 @@ SDL_Surface* kernel (SDL_Surface* image_surface)
     return destination;
 }
 
+
+void SDL_ExitWithError(const char *message);
+
 SDL_Surface* SDL_RotationCentralN(SDL_Surface* origine, float angle)
 {
  SDL_Surface* destination;
@@ -848,7 +851,7 @@ SDL_Surface* SDL_RotationCentralN(SDL_Surface* origine, float angle)
 return destination;
 }
 
-SDL_Surface* RotationAuto(SDL_Surface* img,float varMax,int anglevarMax)
+int RotationAuto(SDL_Surface* img,float varMax,int anglevarMax)
 {
    	int w = img -> w;
 	int h = img -> h;
@@ -884,8 +887,7 @@ SDL_Surface* RotationAuto(SDL_Surface* img,float varMax,int anglevarMax)
     {
         ut += hist[i];
     }
-    
-    printf("h=%i\n",h);
+   
     ut=ut/h;
 
     for (int i=0;i<h;i++)
@@ -896,31 +898,24 @@ SDL_Surface* RotationAuto(SDL_Surface* img,float varMax,int anglevarMax)
     E2=E2/h;
 
     varBetween=sqrt(E2);
-    
-    printf("ut = %f\n",ut);
-    printf("E2= %f\n",E2);
-
-    
-    printf("vB=%f\n",varBetween);
-    printf("vM=%f\n",varMax);
-
-    printf("          \n");
-
+   
     if (varBetween > varMax)
     {
         varMax = varBetween;
         anglevarMax+=1; 
         img=SDL_RotationCentralN (img, 1);
-        img=RotationAuto(img,varMax,anglevarMax);
+        return RotationAuto(img,varMax,anglevarMax);
     }
-   
-  
-    printf("%i\n",anglevarMax);
 
-    return img;  
+    if (anglevarMax>40)
+    {
+        return 0;//break;
+    }
+    return anglevarMax;
+    
 }
 
-void SDL_ExitWithError(const char *message);
+
 
 
 int main(int argc,char *argv[])
@@ -966,16 +961,11 @@ int main(int argc,char *argv[])
 			put_pixel(image_surface,i,j,pixel);
 		}
     }
-
  	/*update_surface(screen_surface, image_surface);
  	wait_for_keypressed();*/
  	
     noiseReduction(image_surface);
-    //RotationAuto(image_surface,0);
 
-
-
-      
     //image_surface = Filter(image_surface);
     //GammaCorrection(image_surface,2.2);
 
@@ -984,12 +974,15 @@ int main(int argc,char *argv[])
     ot(image_surface); 
 
     update_surface(screen_surface, image_surface);
-	screen_surface =  display_image(image_surface);
 	wait_for_keypressed();
 
-    image_surface = RotationAuto(image_surface,0,0);
-    image_surface=SDL_RotationCentralN (image_surface, -1);
+   
+    int angle= RotationAuto(image_surface,0,0);
 
+    if (angle>35)
+    {
+        image_surface=SDL_RotationCentralN(image_surface,angle-1);
+    }
     image_surface = kernel(image_surface);
 
     update_surface(screen_surface, image_surface);
