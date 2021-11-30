@@ -611,6 +611,33 @@ void ots(SDL_Surface* img)
 
 }
 
+void GammaCorrection(SDL_Surface * img,float gamma)
+{
+    int h = img -> h;
+    int w = img ->w ;
+    Uint8 r,g,b;
+    Uint8 newr,newg,newb;
+
+
+    
+    for (int i = 0;i < h;i++)
+    {
+        for (int j=0;j<w;j++)
+        {
+            float invgamma = 1/gamma;
+            Uint32 pixel = get_pixel(img, j, i);
+			SDL_GetRGB(pixel, img->format, &r ,&g,&b);
+
+            newr = (int) (pow((float)(r)/255.0,invgamma)*255);
+            newg = (int) (pow((float)(g)/255.0,invgamma)*255);
+            newb = (int) (pow((float)(b)/255.0,invgamma)*255);
+
+             Uint32 newpixel = SDL_MapRGB(img->format,newr,newg,newb);
+            put_pixel(img,j,i,newpixel);
+        }
+    }
+}
+
 void ot(SDL_Surface* img)
 {
     int width = img -> w;
@@ -648,12 +675,48 @@ void ot(SDL_Surface* img)
         ut += i*(hist[i]/N);
         E2 += i*i*(hist[i]/N); 
     }
-
-
+    
     float v= E2 - (ut*ut);
     float ecart = sqrt(v);
+    if (ecart>55 && ut < 175)
+    {
+
+        GammaCorrection(img,4);
+    }
 
 
+    
+    for (int i =0;i<256;i++)
+    {
+        hist[i]=0;
+    }
+
+    for (int i = 0; i<height;i++)
+    {
+        for (int j=0;j<width;j++)
+        {
+            Uint32 pixel = get_pixel(img, j, i);
+			SDL_GetRGB(pixel, img->format, &r ,&g,&b);
+            hist[r]+=1;
+
+        }
+    }
+
+  
+   ut = 0;
+   E2= 0;
+
+   
+    for (int i = 0;i<256;i++)
+    {
+
+        ut += i*(hist[i]/N);
+        E2 += i*i*(hist[i]/N); 
+    }
+    v= E2 - (ut*ut);
+    ecart = sqrt(v);
+   
+    
     float sum = 0;
     for (int t = 0; t<256;t++)
     {
@@ -696,19 +759,17 @@ void ot(SDL_Surface* img)
         }
      }
 
-        printf("%i\n",threshold);
-        printf("%f\n",ecart);
-        printf("%f\n",ut);
 
-        int alpha=0;
-        if (ecart > 55)
-        {
-            alpha = ut-threshold;
-        }
-        if (ut > 230)
-        {
-            alpha = - ecart;
-        }
+    int alpha=0;
+    if (ecart > 55)
+    { 
+        alpha = ut-threshold;
+    }
+    if (ut > 230)
+    {    
+        alpha = - ecart;
+    }
+  
 
         for (int i = 0; i < height; i++)
 
@@ -745,7 +806,70 @@ void ot(SDL_Surface* img)
         
 }
 
+SDL_Surface* kernel (SDL_Surface* image_surface)
+{
 
+
+    Uint8 r, g, b;
+    Uint8 r1, g1, b1;
+    Uint8 r2, g2, b2;
+    Uint8 r3, g3, b3;
+    Uint8 r4, g4, b4;
+    Uint8 r5, g5, b5;
+    Uint8 r6, g6, b6;
+    Uint8 r7, g7, b7;
+    Uint8 r8, g8, b8;
+    Uint8 color;
+    Uint32 pixel,pixel1,pixel2,pixel3,pixel4,pixel5,pixel6,pixel7,pixel8;
+
+    Uint32 Blackpixel = SDL_MapRGB(image_surface->format, 0, 0, 0);
+    Uint32 Whitepixel = SDL_MapRGB(image_surface->format, 255, 255, 255);
+
+    long width = image_surface -> w;
+    long hight = image_surface -> h;
+
+    SDL_Surface* destination = SDL_CreateRGBSurface(SDL_HWSURFACE, width, hight, image_surface->format->BitsPerPixel,
+                 image_surface->format->Rmask, image_surface->format->Gmask, image_surface->format->Bmask, image_surface->format->Amask);
+
+    for (long y = 1 ; y < hight - 1; y++)
+    {
+        for (long x = 1; x < width - 1; x++)
+        {
+                pixel = get_pixel(image_surface, x, y);
+                pixel1 = get_pixel(image_surface, x+1, y);
+                pixel2 = get_pixel(image_surface, x+1, y+1);
+                pixel3 = get_pixel(image_surface, x+1, y-1);
+                pixel4 = get_pixel(image_surface, x, y-1);
+                pixel5 = get_pixel(image_surface, x, y+1);
+                pixel6 = get_pixel(image_surface, x-1, y-1);
+                pixel7 = get_pixel(image_surface, x-1, y);
+                pixel8 = get_pixel(image_surface, x-1, y+1);
+
+                SDL_GetRGB(pixel, image_surface -> format, &r, &g, &b);
+                SDL_GetRGB(pixel1, image_surface -> format, &r1, &g1, &b1);
+                SDL_GetRGB(pixel2, image_surface -> format, &r2, &g2, &b2);
+                SDL_GetRGB(pixel3, image_surface -> format, &r3, &g3, &b3);
+                SDL_GetRGB(pixel4, image_surface -> format, &r4, &g4, &b4);
+                SDL_GetRGB(pixel5, image_surface -> format, &r5, &g5, &b5);
+                SDL_GetRGB(pixel6, image_surface -> format, &r6, &g6, &b6);
+                SDL_GetRGB(pixel7, image_surface -> format, &r7, &g7, &b7);
+                SDL_GetRGB(pixel8, image_surface -> format, &r8, &g8, &b8);
+
+                color = r -(r1/8 + r2/8 + r3/8 + r4/8 + r5/8 + r6/8 + r7/8 + r8/8);
+
+                if (color > 50)
+                {
+                        put_pixel(destination, x, y, Whitepixel);
+                }
+                else
+                {
+                        put_pixel(destination, x, y, Blackpixel);
+                }
+         }          
+    }
+    
+    return destination;
+}
 
 
 void SDL_ExitWithError(const char *message);
@@ -758,17 +882,7 @@ int main(int argc,char *argv[])
 		errx(1, "must provide filename");
 	
 	#define filename argv[1]
-	
-	/*float seuil;
-	printf("enter threshold \n");
-	
-	if (scanf("%f", &seuil) < 0) {
-	    printf("you want a positive seuil.\n");
-	    return 1;
-	} */
-	
-	
-	
+
 	
 	SDL_Surface* image_surface;
 	SDL_Surface* screen_surface;
@@ -790,10 +904,7 @@ int main(int argc,char *argv[])
 	w = image_surface -> w;
 	h = image_surface -> h;
 	
-	Uint8 r, g, b, average;
- 
-    	
-
+	Uint8 r, g, b, average; 
     
 	for(int i = 0; i < w; i++)
 	{
@@ -806,31 +917,31 @@ int main(int argc,char *argv[])
 			pixel = SDL_MapRGB(image_surface->format, average, average, average);
 			put_pixel(image_surface,i,j,pixel);
 		}
-  	}
- 
- 	update_surface(screen_surface, image_surface);
- 	wait_for_keypressed();
+    }
+   
+ 	/*update_surface(screen_surface, image_surface);
+ 	wait_for_keypressed();*/
  	
-    
-    Filter(image_surface);
-
     noiseReduction(image_surface);
+    //image_surface = Filter(image_surface);
+    //GammaCorrection(image_surface,2.2);
 
+  
+	/*update_surface(screen_surface, image_surface);
+	wait_for_keypressed();*/
 
-	update_surface(screen_surface, image_surface);
-
-	
-	wait_for_keypressed();
-	
 	//otsu(image_surface,seuil);
     //ots(image_surface);
-    ot(image_surface);
-	
-    //image_surface = Filter(image_surface);
+    ot(image_surface); 
 
+	/*update_surface(screen_surface, image_surface);
+	wait_for_keypressed();*/
 	
-	update_surface(screen_surface, image_surface);
+	image_surface = kernel(image_surface);
+
+	screen_surface =  display_image(image_surface);
 	wait_for_keypressed();
+
 	
     SDL_SaveBMP(image_surface,"hihihi.bmp");	
 	
