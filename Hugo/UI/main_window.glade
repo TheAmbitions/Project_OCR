@@ -356,20 +356,6 @@
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkColorButton">
-                        <property name="height_request">150</property>
-                        <property name="visible">True</property>
-                        <property name="can_focus">True</property>
-                        <property name="receives_default">True</property>
-                        <property name="margin_top">20</property>
-                        <property name="color">#efef29292929</property>
-                      </object>
-                      <packing>
-                        <property name="left_attach">0</property>
-                        <property name="top_attach">18</property>
-                      </packing>
-                    </child>
-                    <child>
                       <object class="GtkLabel">
                         <property name="height_request">50</property>
                         <property name="visible">True</property>
@@ -380,6 +366,30 @@
                       <packing>
                         <property name="left_attach">0</property>
                         <property name="top_attach">6</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkDrawingArea">
+                        <property name="height_request">20</property>
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                      </object>
+                      <packing>
+                        <property name="left_attach">0</property>
+                        <property name="top_attach">18</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkImage">
+                        <property name="width_request">300</property>
+                        <property name="height_request">150</property>
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="pixbuf">UI_img/img_sudoku.png</property>
+                      </object>
+                      <packing>
+                        <property name="left_attach">0</property>
+                        <property name="top_attach">19</property>
                       </packing>
                     </child>
                   </object>
