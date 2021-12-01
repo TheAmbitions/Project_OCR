@@ -931,12 +931,7 @@ int RotationAuto(SDL_Surface* img,float varMax,int anglevarMax)
         img=SDL_RotationCentralN (img, anglevarMax);
     }
  
-    /*if (anglevarMax>40 && varBetween<varMax)
-    {
-        anglevarMax = 0;
-        anglevarMax -=10;
-        img=SDL_RotationCentralN (img, -10);
-    }*/
+
     return anglevarMax;
     
 }
@@ -1015,6 +1010,8 @@ int main(int argc,char *argv[])
     }
 
     image_surface = kernel(image_surface);
+
+    //GammaCorrection(image_surface,2.2);
 
     update_surface(screen_surface, image_surface);
 

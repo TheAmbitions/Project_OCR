@@ -1,5 +1,6 @@
 #include <gtk/gtk.h>
 
+
 // State of the game.
 typedef enum State
 {
@@ -22,7 +23,8 @@ typedef struct UserInterface
     GtkCheckButton* Auto;
     GtkCheckButton* Manual;
     
-    GtkSpinButton* Rotation; //rotation
+    GtkEntry* Rotation; //rotation
+    GtkButton* Enter;
     
     GtkCheckButton* Noise;
     GtkCheckButton* BW;
@@ -116,6 +118,7 @@ gboolean Automatic(GtkWidget *widget, gpointer user_data)
 		gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(game->ui.Manual),FALSE);
 		
 		gtk_widget_set_sensitive (GTK_WIDGET(game->ui.Rotation),FALSE);
+        gtk_widget_set_sensitive (GTK_WIDGET(game->ui.Enter),FALSE);
 		gtk_widget_set_sensitive (GTK_WIDGET(game->ui.Noise),FALSE);
 		gtk_widget_set_sensitive (GTK_WIDGET(game->ui.BW),FALSE);
 		gtk_widget_set_sensitive (GTK_WIDGET(game->ui.Grid),FALSE);
@@ -148,6 +151,7 @@ gboolean Manu(GtkWidget *widget, gpointer user_data)
 			
 				
 		gtk_widget_set_sensitive (GTK_WIDGET(game->ui.Rotation),TRUE);
+        gtk_widget_set_sensitive (GTK_WIDGET(game->ui.Enter),TRUE);
 		gtk_widget_set_sensitive (GTK_WIDGET(game->ui.Noise),TRUE);
 		gtk_widget_set_sensitive (GTK_WIDGET(game->ui.BW),TRUE);
 		gtk_widget_set_sensitive (GTK_WIDGET(game->ui.Grid),TRUE);
@@ -162,7 +166,33 @@ gboolean Manu(GtkWidget *widget, gpointer user_data)
 gboolean value_changed(GtkWidget *widget, gpointer user_data)
 {
 	Game *game = user_data;
-	g_print("%i\n",gtk_spin_button_get_value_as_int(GTK_SPIN_BUTTON(game->ui.Rotation)));
+    int res=0;
+    int acc=100;
+    const gchar* s= gtk_entry_get_text(GTK_ENTRY(game));
+    for (int i=1;i<4;i++)
+    {
+        if (s[i] >='0' && s[i] <= '9')
+        {
+            res += acc*(s[i] - '0');
+            acc /=10;
+        }
+        else
+        {
+            return 0;
+        }
+    }
+
+    if (s[0]=='-')
+    {
+        res=-res;
+    }
+    
+    if ( (s[0]!= '-') && (s[0] <'0' || s[0] > '9'))
+    {
+        return 0;
+    }
+    
+    printf("%i\n",res);
 	return 0;
 }
 
@@ -272,7 +302,9 @@ int main (int argc, char *argv[])
     GtkCheckButton* Auto = GTK_CHECK_BUTTON(gtk_builder_get_object(builder, "Auto"));
     GtkCheckButton* Manual = GTK_CHECK_BUTTON(gtk_builder_get_object(builder, "Manual"));
     
-    GtkSpinButton* Rotation = GTK_SPIN_BUTTON(gtk_builder_get_object(builder,"Rotation"));
+    GtkEntry* Rotation = GTK_ENTRY(gtk_builder_get_object(builder,"Rotation"));
+    GtkButton* Enter = GTK_BUTTON(gtk_builder_get_object(builder, "Enter"));
+
     
     GtkCheckButton* Noise = GTK_CHECK_BUTTON(gtk_builder_get_object(builder, "Noise"));
     GtkCheckButton* BW = GTK_CHECK_BUTTON(gtk_builder_get_object(builder, "BW"));
@@ -293,6 +325,7 @@ int main (int argc, char *argv[])
                 .Auto = Auto,
                 .Manual = Manual,
                 .Rotation = Rotation,
+                .Enter = Enter,
                 .Noise = Noise,
                 .BW=BW,
                 .Grid = Grid,
@@ -305,6 +338,7 @@ int main (int argc, char *argv[])
 	Auto = GTK_CHECK_BUTTON(gtk_builder_get_object(builder, "Auto"));
 	
 	gtk_widget_set_sensitive (GTK_WIDGET(Rotation),FALSE);
+    gtk_widget_set_sensitive (GTK_WIDGET(Enter),FALSE);
 	gtk_widget_set_sensitive (GTK_WIDGET(Noise),FALSE);
 	gtk_widget_set_sensitive (GTK_WIDGET(BW),FALSE);
 	gtk_widget_set_sensitive (GTK_WIDGET(Grid),FALSE);
@@ -318,7 +352,10 @@ int main (int argc, char *argv[])
 	g_signal_connect(Manual, "clicked", G_CALLBACK(Manu), &game);
 	g_signal_connect(Auto, "clicked", G_CALLBACK(Automatic), &game);
 	
-	g_signal_connect(Rotation,"value-changed",G_CALLBACK(value_changed),&game);
+	g_signal_connect(Enter,"clicked",G_CALLBACK(value_changed), Rotation);
+
+ 
+
 	g_signal_connect(Noise, "clicked", G_CALLBACK(NoiseReduc), &game);
 	g_signal_connect(BW, "clicked", G_CALLBACK(BlackWhite), &game);
 	g_signal_connect(Grid, "clicked", G_CALLBACK(GridDetec), &game);
