@@ -175,19 +175,40 @@ int ecar (double l[], int t, double* eca)
 
 void fin (double l[], int t, double *eca)
 {
+    printf("ecart = %lf\n", *eca);
     int i = 2;
     int j = 0;
     while (j < t)
     { 
         if (l[i] == 4)
         {
+            printf("l[i] = %lf\n",l[i-2]); 
             j += 1;
-            if (j == t)
+            if (j == 1)
             {
-                l[0] = l[i-2] - 9 * *eca;
-                l[1] = l[i-1];
-                l[2] = l[i - 2];
-                l[3] = l[i - 1];
+                if ((int)l[i-2]==43)
+                {
+                    l[0] = l[i-2] + *eca;
+                    l[1] = l[i-1];
+                    l[2] = l[i - 2] + *eca * 10;
+                    l[3] = l[i - 1];
+                    j = 11;
+                    printf("arnaque -> l1 = %lf\n        -> l2 = %lf\n",l[0],l[2]); 
+                }
+
+                else
+                {
+                    l[0] = l[i-2];
+                    l[1] = l[i-1];
+                }
+            }
+            else
+            {
+                if (j == t)
+                {
+                    l[2] = l[i-2];
+                    l[3] = l[i-1];
+                }
             }
         }
         i += 3;

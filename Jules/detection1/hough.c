@@ -439,7 +439,7 @@ int main(int argc,char *argv[])
     double accum_seuil[(int)floor(sqrt(image_traite->w*image_traite->w +
     image_traite->h*image_traite->h)) * 180];
 
-    image_surface = hough(image_traite, image_traite,130, accum, accum_seuil);
+    image_surface = hough(image_traite, image_traite,240, accum, accum_seuil);
     printf("apres hough\n\n");
     SDL_SaveBMP(image_traite, "hihi.bmp");
 	update_surface(screen_surface, image_traite);
