@@ -30,6 +30,9 @@ typedef struct UserInterface
 
 typedef struct Create_sudoku
 {
+    char *file;
+    GtkWindow *win;
+    GtkDrawingArea *area;
     GtkButton *new;
     GtkButton *back;
     GtkButton *add;
@@ -513,6 +516,41 @@ gboolean GridDetec(GtkWidget* widget, gpointer user_data)
     return 0;
 }
 
+/*void on_draw_fig(App* app)
+{
+    g_print("ok\n");
+    //App* app = user_data;
+    cairo_t *cr;
+    cr = gdk_cairo_create(app->sud.win);
+    cairo_set_source_rgb(cr, 0, 0, 0);
+    SDL_Surface *img = load_image(app->sud.file);
+    Uint32 p;
+    Uint8 r, g, b;
+    for (int i = 0; i < img->h; i++)
+    {
+	for (int j = 0; j < img->w; j++)
+	{
+	     p = get_pixel(img, j, i);
+	     SDL_GetRGB(p, img->format, &r, &g, &b);
+	     if (r < 10 && g < 10 && b < 10)
+	         cairo_rectangle(cr, i, j, 1, 1);
+	}
+    }
+}*/
+
+void add_1(GtkWidget *widget)
+{
+    //App* app = user_data;
+    cairo_t *cr;
+    cr = gdk_cairo_create(w);
+    cairo_set_source_rgb(cr, 0, 0, 0);
+    g_print("OK2\n");
+    app->sud.file = "UI_img/1.png";
+    g_print("OK3\n");
+    //g_signal_connect(app->sud.area, "draw", G_CALLBACK(on_draw_fig), app);
+    //on_draw_fig(app);
+}
+
 gboolean on_draw(GtkWidget *widget, cairo_t *cr, gpointer user_data)
 {
     cairo_set_source_rgb(cr, 1, 1, 1);
@@ -544,6 +582,7 @@ gboolean on_draw(GtkWidget *widget, cairo_t *cr, gpointer user_data)
 
 void generate_sud(GtkButton* button, gpointer user_data)
 {
+    App* app = user_data;
     GtkBuilder* builder = gtk_builder_new();
     GError* error = NULL;
     if (gtk_builder_add_from_file(builder, "create_sudoku.glade", &error) == 0)
@@ -554,11 +593,17 @@ void generate_sud(GtkButton* button, gpointer user_data)
     else
     {
 	GtkWindow* w = GTK_WINDOW(gtk_builder_get_object(builder, "create_sudoku"));
+	GtkButton* _1 = GTK_BUTTON(gtk_builder_get_object(builder, "1"));
         GtkDrawingArea* area = GTK_DRAWING_AREA(gtk_builder_get_object(builder, "area"));
+        
+	app->sud.win = w;
+        app->sud.area = area;
+	app->sud._1 = _1;
 
         gtk_widget_show_all(GTK_WIDGET(w));
         g_signal_connect_swapped(G_OBJECT(w), "destroy", G_CALLBACK(close_window), NULL);
 	g_signal_connect(area, "draw", G_CALLBACK(on_draw), NULL);
+	g_signal_connect(G_OBJECT(_1), "clicked", G_CALLBACK(add_1), (gpointer)w);
     }
 
 }
@@ -630,6 +675,9 @@ int main (int argc, char *argv[])
         },
 	.sud =
 	{
+	    .file = "",
+	    .win = NULL,
+	    .area = NULL,
 	    .new = NULL,
 	    .add = NULL,
 	    .back = NULL,
