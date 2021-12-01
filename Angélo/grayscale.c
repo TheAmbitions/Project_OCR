@@ -527,10 +527,10 @@ void ots(SDL_Surface* img)
     float v= E2 - (ut*ut);
     float ecart = sqrt(v);
 
-    if (ut > 197 && ut<205)
+    /*if (ut > 197 && ut<205)
     {
         test(img,ecart);
-    }
+    }*/
     if (ecart<60 && ecart>50)
     {
         ut-=20;
@@ -621,9 +621,16 @@ void ot(SDL_Surface* img)
         E2 += i*i*(hist[i]/N); 
     }
     
+    
     float v= E2 - (ut*ut);
     float ecart = sqrt(v);
-    if (ecart>55 && ut < 175)
+
+    if (ecart>100 && ut <100)
+    {
+
+        GammaCorrection(img,0.5);
+    }
+    if (ecart>55 && v < 3500)
     {
 
         GammaCorrection(img,4);
@@ -898,19 +905,38 @@ int RotationAuto(SDL_Surface* img,float varMax,int anglevarMax)
     E2=E2/h;
 
     varBetween=sqrt(E2);
-   
-    if (varBetween > varMax)
-    {
-        varMax = varBetween;
-        anglevarMax+=1; 
-        img=SDL_RotationCentralN (img, 1);
-        return RotationAuto(img,varMax,anglevarMax);
-    }
+    
+    printf("%f\n",varBetween);
+    printf("%f\n",varMax);
 
-    if (anglevarMax>40)
+    if(anglevarMax<=45 && anglevarMax>=0)
     {
-        return 0;//break;
+        if (varBetween > varMax-1)
+        {
+            varMax = varBetween;
+            anglevarMax+=1; 
+            img=SDL_RotationCentralN (img, 1);
+            return RotationAuto(img,varMax,anglevarMax);
+        }
+
+        if (anglevarMax>37)
+        {
+            return 0; 
+        }
+
     }
+    else
+    {
+        anglevarMax = -anglevarMax;
+        img=SDL_RotationCentralN (img, anglevarMax);
+    }
+ 
+    /*if (anglevarMax>40 && varBetween<varMax)
+    {
+        anglevarMax = 0;
+        anglevarMax -=10;
+        img=SDL_RotationCentralN (img, -10);
+    }*/
     return anglevarMax;
     
 }
@@ -964,7 +990,7 @@ int main(int argc,char *argv[])
  	/*update_surface(screen_surface, image_surface);
  	wait_for_keypressed();*/
  	
-    noiseReduction(image_surface);
+    //noiseReduction(image_surface);
 
     //image_surface = Filter(image_surface);
     //GammaCorrection(image_surface,2.2);
@@ -978,9 +1004,14 @@ int main(int argc,char *argv[])
 
     int angle= RotationAuto(image_surface,0,0);
 
+    printf("%i\n",angle);
     if (angle>35)
     {
         image_surface=SDL_RotationCentralN(image_surface,angle-1);
+    }
+    if (angle<0)
+    {
+        image_surface=SDL_RotationCentralN(image_surface,angle+1);
     }
 
     image_surface = kernel(image_surface);
