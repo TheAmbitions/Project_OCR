@@ -7,7 +7,7 @@
 #include "pixel_operations.h"
 #include "detection.h"
 #include "otsu.h"
-
+#include "rotation.h"
 #include "display.h"
 
 
@@ -242,7 +242,7 @@ SDL_Surface* kernel (SDL_Surface* image_surface)
 
                 color = r -(r1/8 + r2/8 + r3/8 + r4/8 + r5/8 + r6/8 + r7/8 + r8/8);
 
-                if (color > 75)
+                if (color > 50)
                 {
                         put_pixel(destination, x, y, Whitepixel);
                 }
@@ -348,13 +348,16 @@ accum[], double accum_seuil[])
     double a,m,x0,y0,x1,y1,x2,y2;
 	
     printf("nb ligne = %i\n", i);
-    if (i<100)
+    if (i>=20&&i<100)
     {
+     
         int t = search(lignes, 2*nb);
+        printf("\n--->draw<---\n");
         for (int i = 0; i < t; i += 2)
-        //for (int i = 0; i < nb*2; i += 2)
+        //for (int i = 0; i < nb*2; i += 2)      
         {
             //printf("draw\n");
+            printf("rho = %lf theta = %lf\n",lignes[i],lignes[i+1]);
             rho = lignes[i];
             theta = lignes[i + 1];
             a = cos(theta);
@@ -365,15 +368,17 @@ accum[], double accum_seuil[])
             y1 = (y0 + 1000 * (a));
             x2 = (x0 - 1000 *(-m));
             y2 = (y0 - 1000 * (a));
-       	    dest = drawLine(dest,(int)x1, (int)y1, (int)x2,(int)y2);    
+            dest = drawLine(dest,(int)x1, (int)y1, (int)x2,(int)y2);    
         }
         return dest;
     }
 
     else
     {
+        if (i<20)
+            return hough(img,dest,seuil -10,accum, accum_seuil);
         printf("seuil too hight\n\n");
-        return hough(img,dest,seuil +5,accum, accum_seuil);
+        return hough(img,dest,seuil +10,accum, accum_seuil);
     }
 
 
@@ -423,25 +428,38 @@ int main(int argc,char *argv[])
  	
 	//image_traite = Filter(image_surface);
 	//otsu(image_traite);
-    ots(image_traite);
+    otsu(image_traite);
 	screen_surface =  display_image(image_traite);
 	wait_for_keypressed();
 	//image_surface = sobel(image_surface);
+	int angle= RotationAuto(image_traite,0,0);
+	printf("angle = %i\n",angle);
+        if (angle>35)
+        {
+            image_traite=SDL_RotationCentralN(image_traite,angle-1);
+        }
+        if (angle<0)
+    	{
+            image_traite=SDL_RotationCentralN(image_traite,angle+1);
+    	}	
+    	SDL_SaveBMP(image_traite, "hihi.bmp");
 	image_traite = kernel(image_traite);
+	update_surface(screen_surface, image_traite);
 	screen_surface =  display_image(image_traite);
 	wait_for_keypressed();
+	printf("new w = %i\nnew h = %i",image_traite->w,image_traite->h);
 
 	//update_surface(screen_surface, image_surface);
 	//wait_for_keypressed();
-    printf("avant hough\n\n\n");
+
     double accum[(int)floor(sqrt(image_traite->w*image_traite->w +
     image_traite->h*image_traite->h)) * 180];
     double accum_seuil[(int)floor(sqrt(image_traite->w*image_traite->w +
     image_traite->h*image_traite->h)) * 180];
-
+    printf("avant hough\n\n\n");
     image_surface = hough(image_traite, image_traite,240, accum, accum_seuil);
     printf("apres hough\n\n");
-    SDL_SaveBMP(image_traite, "hihi.bmp");
+    
 	update_surface(screen_surface, image_traite);
 	
 	//update_surface(screen_surface, image_surface);

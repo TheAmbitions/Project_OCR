@@ -150,134 +150,36 @@ void noiseReduction(SDL_Surface *img)
  }
 }
 
-void test(SDL_Surface *img,int ecart)
+void GammaCorrection(SDL_Surface * img,float gamma)
 {
-    int h = img->h;
-    int w = img->w ;
-    int r = 0;
-    int T = h*w;
-	Uint8 rt, gt, bt;
+    int h = img -> h;
+    int w = img ->w ;
+    Uint8 r,g,b;
+    Uint8 newr,newg,newb;
 
-    for (int i =0; i< h ;i++)
+    for (int i = 0;i < h;i++)
     {
-        for (int j= 0;j<h ; j++)
+        for (int j=0;j<w;j++)
         {
-
-            unsigned pixel = get_pixel(img, j, i);
-			SDL_GetRGB(pixel, img->format, &rt, &gt, &bt);
-			r += rt;
-        }
-    }
-
-   int avg = r /T;
-
-    for (int i =0; i <h;i++)
-    {
-        for (int j=0; j<w;j++)
-        {
-            unsigned pixel = get_pixel(img,j,i);
-            SDL_GetRGB(pixel,img->format,&rt,&gt,&bt);
-            if (rt < avg + ecart)
-            {
-                pixel = SDL_MapRGB(img->format, 0,0,0);
-                put_pixel(img,j,i,pixel);
-            }
-        }
-    }
-}
-
-void ots(SDL_Surface* img)
-{
-    int width = img -> w;
-	int height = img -> h;
-	Uint8 r,g,b;
-
-    int hist[256];
-    for (int i =0;i<256;i++)
-    {
-        hist[i]=0;
-    }
-
-    for (int i = 0; i<height;i++)
-    {
-        for (int j=0;j<width;j++)
-        {
-            Uint32 pixel = get_pixel(img, j, i);
-			SDL_GetRGB(pixel, img->format, &r ,&g,&b);
-            hist[r]+=1;
-
-        }
-    }
-
-    float ut = 0;
-    float E2= 0;
-    float N = height*width;
-
-
-   
-    for (int i = 0;i<256;i++)
-    {
-
-        ut += i*(hist[i]/N);
-        E2 += i*i*(hist[i]/N); 
-    }
-
-
-    float v= E2 - (ut*ut);
-    float ecart = sqrt(v);
-
-    if (ut > 197 && ut<205)
-    {
-        test(img,ecart);
-    }
-    if (ecart<60 && ecart>50)
-    {
-        ut-=20;
-    }
-
-    for (int i = 0; i < height; i++)
-
-	{
-
-		for (int j = 0; j < width; j++)
-
-		{
-
+            float invgamma = 1/gamma;
             Uint32 pixel = get_pixel(img, j, i);
 			SDL_GetRGB(pixel, img->format, &r ,&g,&b);
 
-			if (r + ecart < ut)
+            newr = (int) (pow((float)(r)/255.0,invgamma)*255);
+            newg = (int) (pow((float)(g)/255.0,invgamma)*255);
+            newb = (int) (pow((float)(b)/255.0,invgamma)*255);
 
-			{
-
-				pixel = SDL_MapRGB(img ->format, 0, 0, 0);
-				put_pixel(img,j,i,pixel);
-
-			}
-
-			else
-
-			{
-
-				pixel = SDL_MapRGB(img->format, 255, 255, 255);
-				put_pixel(img,j,i,pixel);
-
-			}
-
-		}
-
-	}
-
-
+             Uint32 newpixel = SDL_MapRGB(img->format,newr,newg,newb);
+            put_pixel(img,j,i,newpixel);
+        }
+    }
 }
-
  
 void otsu(SDL_Surface* img)
 {
-    noiseReduction(img);
     int width = img -> w;
-	int height = img -> h;
-	Uint8 r,g,b;
+    int height = img -> h;
+    Uint8 r,g,b;
     int total = width * height;
 
     int hist[256];
@@ -297,12 +199,9 @@ void otsu(SDL_Surface* img)
         }
     }
 
-  
    float ut = 0;
     float E2= 0;
     float N = height*width;
-
-
    
     for (int i = 0;i<256;i++)
     {
@@ -310,12 +209,51 @@ void otsu(SDL_Surface* img)
         ut += i*(hist[i]/N);
         E2 += i*i*(hist[i]/N); 
     }
-
-
+    
+    
     float v= E2 - (ut*ut);
     float ecart = sqrt(v);
 
+    if (ecart>100 && ut <100)
+    {
 
+        GammaCorrection(img,0.5);
+    }
+    if (ecart>55 && v < 3500)
+    {
+
+        GammaCorrection(img,4);
+    }
+    
+    for (int i =0;i<256;i++)
+    {
+        hist[i]=0;
+    }
+
+    for (int i = 0; i<height;i++)
+    {
+        for (int j=0;j<width;j++)
+        {
+            Uint32 pixel = get_pixel(img, j, i);
+			SDL_GetRGB(pixel, img->format, &r ,&g,&b);
+            hist[r]+=1;
+
+        }
+    }
+
+   ut = 0;
+   E2= 0;
+   
+    for (int i = 0;i<256;i++)
+    {
+
+        ut += i*(hist[i]/N);
+        E2 += i*i*(hist[i]/N); 
+    }
+    v= E2 - (ut*ut);
+    ecart = sqrt(v);
+   
+    
     float sum = 0;
     for (int t = 0; t<256;t++)
     {
@@ -358,51 +296,39 @@ void otsu(SDL_Surface* img)
         }
      }
 
-
-        int alpha=0;
-        if (ecart > 55)
-        {
-            alpha = ut-threshold;
-        }
-        if (ut > 230)
-        {
-            alpha = - ecart;
-        }
-
+    int alpha=0;
+    if (ecart > 55)
+    { 
+        alpha = ut-threshold;
+    }
+    if (ut > 230)
+    {    
+        alpha = - ecart;
+    }
+  
         for (int i = 0; i < height; i++)
-
 	    {
 
 		    for (int j = 0; j < width; j++)
-
 		    {
 
                 Uint32 pixel = get_pixel(img, j, i);
 			    SDL_GetRGB(pixel, img->format, &r ,&g,&b);
 
                 if (r < threshold - alpha)
-
                 {
-
                     pixel = SDL_MapRGB(img ->format, 0, 0, 0);
                     put_pixel(img,j,i,pixel);
-
                 }
-
                 else
-
                 {
-
                     pixel = SDL_MapRGB(img->format, 255, 255, 255);
                     put_pixel(img,j,i,pixel);
-
                 }
-
 		    }
-        }
-    
-        
+        }        
 }
+
 
 
 
