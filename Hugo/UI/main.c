@@ -15,6 +15,7 @@ typedef struct UserInterface
 {
     GtkWindow *window;
     GtkButton *load;
+    GtkButton *show;
     GtkButton *save;
     GtkButton *resolve;
     GtkButton *network;
@@ -36,7 +37,9 @@ typedef struct Image
 typedef struct Application
 {
     gchar* filename;
+    int is_rot;
     int is_resolve;
+    int is_otsu;
     SDL_Surface* image_surface;
     SDL_Surface* dis_img;
     
@@ -93,11 +96,13 @@ void openfile(GtkButton *button, gpointer user_data)
         //g_print("Weight = %i\n", app->image_surface->w);
         //g_print("Height = %i\n", app->image_surface->h);
         app->dis_img = resize(app->dis_img);
-        SDL_SaveBMP(app->dis_img, "display.bmp");
+        SDL_SaveBMP(app->dis_img, "tmp_img/display.bmp");
         //g_print("Weight = %i\n", app->dis_img->w);
         //g_print("Height = %i\n", app->dis_img->h);
-        gtk_image_set_from_file(app->image.img, "display.bmp");
+        gtk_image_set_from_file(app->image.img, "tmp_img/display.bmp");
         app->is_resolve = 0;
+	app->is_otsu = 0;
+	app->is_rot = 0;
 	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(app->ui.bw), FALSE);
         break;
     }
@@ -105,6 +110,33 @@ void openfile(GtkButton *button, gpointer user_data)
         break;
     }
     gtk_widget_destroy(dialog);
+}
+
+void close_window(GtkWidget *widget, gpointer w)
+{
+    gtk_widget_destroy(GTK_WIDGET(w));
+}
+
+void on_show(GtkButton *button, gpointer user_data)
+{
+    App *app = user_data;
+    GtkBuilder* builder = gtk_builder_new();
+    GError* error = NULL;
+    if (gtk_builder_add_from_file(builder, "show_window.glade", &error) == 0)
+    {
+        g_printerr("Error loading file: %s\n", error->message);
+        g_clear_error(&error);
+    }
+    else
+    {
+	SDL_SaveBMP(app->image_surface, "tmp_img/vrai_image.bmp");
+	GtkWindow* w = GTK_WINDOW(gtk_builder_get_object(builder, "window"));
+        GtkImage* img = GTK_IMAGE(gtk_builder_get_object(builder, "img"));
+
+        gtk_widget_show_all(GTK_WIDGET(w));
+	gtk_image_set_from_file(img, "tmp_img/vrai_image.bmp");
+        g_signal_connect_swapped(G_OBJECT(w), "destroy", G_CALLBACK(close_window), NULL);
+    }
 }
 
 void on_save(GtkButton *button, gpointer user_data)
@@ -353,6 +385,7 @@ gboolean value_changed(GtkWidget* widget, gpointer user_data)
     app->image.rot_img = resize(app->image.rot_img);
     SDL_SaveBMP(app->image.rot_img, "tmp_img/rotation.bmp");
     gtk_image_set_from_file(app->image.img, "tmp_img/rotation.bmp");
+    app->is_otsu = 0;
     return 0;
 }
 
@@ -397,15 +430,27 @@ gboolean BlackWhite(GtkWidget* widget, gpointer user_data)
     if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(app->ui.bw)) == TRUE)
     {
 	gtk_widget_set_sensitive(GTK_WIDGET(app->ui.Grid), TRUE);
-	apply_otsu(&(app->image_surface));
-	SDL_SaveBMP(app->image_surface, "tmp_img/otsu.bmp");
-        gtk_image_set_from_file(app->image.img, "tmp_img/otsu.bmp");
+	if (app->is_otsu == 0)
+	{
+	    app->image_surface = apply_otsu(app->image_surface);
+            app->image.otsu_img = load_image("tmp_img/otsu.bmp");
+            app->image.otsu_img = resize(app->image.otsu_img);
+            SDL_SaveBMP(app->image.otsu_img, "tmp_img/otsu.bmp");
+            gtk_image_set_from_file(app->image.img, "tmp_img/otsu.bmp");
+	    app->is_otsu = 1;
+	}
+	else
+            gtk_image_set_from_file(app->image.img, "tmp_img/otsu.bmp");
         return 0;
     }
     else if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(app->ui.bw)) == FALSE)
     {
 	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(app->ui.Grid), FALSE);
 	gtk_widget_set_sensitive(GTK_WIDGET(app->ui.Grid), FALSE);
+	if (app->is_rot == 1)
+	    gtk_image_set_from_file(app->image.img, "tmp_img/rotation.bmp");
+	else
+	    gtk_image_set_from_file(app->image.img, "tmp_img/display.bmp");
         return 0;
     }
 
@@ -453,6 +498,7 @@ int main (int argc, char *argv[])
     // Gets the widgets.
     GtkWindow* window = GTK_WINDOW(gtk_builder_get_object(builder, "The Ambitions"));
     GtkButton* load = GTK_BUTTON(gtk_builder_get_object(builder, "load"));
+    GtkButton* show = GTK_BUTTON(gtk_builder_get_object(builder, "show"));
     GtkButton* save = GTK_BUTTON(gtk_builder_get_object(builder, "save"));
     GtkButton* resolve = GTK_BUTTON(gtk_builder_get_object(builder, "resolve"));
     GtkButton* network = GTK_BUTTON(gtk_builder_get_object(builder, "network"));
@@ -467,7 +513,9 @@ int main (int argc, char *argv[])
     App app =
     {
         .filename = "",
+	.is_rot = 0,
 	.is_resolve = 0,
+	.is_otsu = 0,
         .image_surface = NULL,
         .dis_img = NULL,
         .image = 
@@ -480,6 +528,7 @@ int main (int argc, char *argv[])
         {
             .window = window,
             .load = load,
+	    .show = show,
             .save = save,
             .resolve = resolve,
             .network = network,
@@ -504,6 +553,7 @@ int main (int argc, char *argv[])
     // Connects signal handlers.
     g_signal_connect(window, "destroy", G_CALLBACK(gtk_main_quit), NULL);
     g_signal_connect(load, "clicked", G_CALLBACK(openfile), &app);
+    g_signal_connect(show, "clicked", G_CALLBACK(on_show), &app);
     g_signal_connect(save, "clicked", G_CALLBACK(on_save), &app);
     g_signal_connect(resolve, "clicked", G_CALLBACK(on_resolve), &app);
     g_signal_connect(network, "clicked", G_CALLBACK(on_network), &app);

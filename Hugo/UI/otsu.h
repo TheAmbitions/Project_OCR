@@ -4,6 +4,6 @@
 #include "SDL/SDL.h"
 #include "SDL/SDL_image.h"
 
-void apply_otsu(SDL_Surface** img);
+SDL_Surface* apply_otsu(SDL_Surface* img);
 
 #endif
