@@ -25,7 +25,25 @@ typedef struct UserInterface
     GtkCheckButton *IA;
     GtkCheckButton *bw;
     GtkCheckButton *Grid;
+    GtkButton *Generate;
 }UserInterface;
+
+typedef struct Create_sudoku
+{
+    GtkButton *new;
+    GtkButton *back;
+    GtkButton *add;
+    GtkButton *_0;
+    GtkButton *_1;
+    GtkButton *_2;
+    GtkButton *_3;
+    GtkButton *_4;
+    GtkButton *_5;
+    GtkButton *_6;
+    GtkButton *_7;
+    GtkButton *_8;
+    GtkButton *_9;
+}cre_sud;
 
 typedef struct Image
 {
@@ -45,6 +63,7 @@ typedef struct Application
     
     Image image;
     UserInterface ui;
+    cre_sud sud;
 }App;
 
 typedef struct ProgressBar
@@ -120,22 +139,40 @@ void close_window(GtkWidget *widget, gpointer w)
 void on_show(GtkButton *button, gpointer user_data)
 {
     App *app = user_data;
-    GtkBuilder* builder = gtk_builder_new();
-    GError* error = NULL;
-    if (gtk_builder_add_from_file(builder, "show_window.glade", &error) == 0)
+    if (app->image_surface == NULL)
     {
-        g_printerr("Error loading file: %s\n", error->message);
-        g_clear_error(&error);
-    }
-    else
-    {
-	SDL_SaveBMP(app->image_surface, "tmp_img/vrai_image.bmp");
-	GtkWindow* w = GTK_WINDOW(gtk_builder_get_object(builder, "window"));
-        GtkImage* img = GTK_IMAGE(gtk_builder_get_object(builder, "img"));
+	GtkWidget* dialog;
+        GtkDialogFlags flags = GTK_DIALOG_DESTROY_WITH_PARENT;
+        dialog = gtk_message_dialog_new_with_markup(app->ui.window,
+            flags,
+            GTK_MESSAGE_ERROR,
+            GTK_BUTTONS_CLOSE,
+            "Error!\n\nNo image.\n\nPlease, load an image before show.");
 
-        gtk_widget_show_all(GTK_WIDGET(w));
-	gtk_image_set_from_file(img, "tmp_img/vrai_image.bmp");
-        g_signal_connect_swapped(G_OBJECT(w), "destroy", G_CALLBACK(close_window), NULL);
+        gtk_dialog_run(GTK_DIALOG(dialog));
+        g_signal_connect_swapped(dialog, "response",
+            G_CALLBACK(gtk_widget_destroy),
+            dialog);
+    }
+    else 
+    {
+        GtkBuilder* builder = gtk_builder_new();
+        GError* error = NULL;
+        if (gtk_builder_add_from_file(builder, "show_window.glade", &error) == 0)
+        {
+            g_printerr("Error loading file: %s\n", error->message);
+            g_clear_error(&error);
+        }
+        else
+        {
+	    SDL_SaveBMP(app->image_surface, "tmp_img/vrai_image.bmp");
+	    GtkWindow* w = GTK_WINDOW(gtk_builder_get_object(builder, "window"));
+            GtkImage* img = GTK_IMAGE(gtk_builder_get_object(builder, "img"));
+
+            gtk_widget_show_all(GTK_WIDGET(w));
+	    gtk_image_set_from_file(img, "tmp_img/vrai_image.bmp");
+            g_signal_connect_swapped(G_OBJECT(w), "destroy", G_CALLBACK(close_window), NULL);
+        }
     }
 }
 
@@ -144,7 +181,7 @@ void on_save(GtkButton *button, gpointer user_data)
     App* app = user_data;
     if (app->image_surface == NULL)
     {
-	    GtkWidget* dialog;
+	GtkWidget* dialog;
         GtkDialogFlags flags = GTK_DIALOG_DESTROY_WITH_PARENT;
         dialog = gtk_message_dialog_new_with_markup(app->ui.window,
             flags,
@@ -476,6 +513,56 @@ gboolean GridDetec(GtkWidget* widget, gpointer user_data)
     return 0;
 }
 
+gboolean on_draw(GtkWidget *widget, cairo_t *cr, gpointer user_data)
+{
+    cairo_set_source_rgb(cr, 1, 1, 1);
+    cairo_paint(cr);
+    cairo_set_source_rgb(cr, 0, 0, 0);
+    int x = 0; 
+    for (x = 0; x < 658; x += 219)
+    {
+        cairo_rectangle(cr, x, 0,
+            4, 658);
+        cairo_fill(cr);
+	cairo_rectangle(cr, 0, x,
+            660, 4);
+        cairo_fill(cr);
+    }
+
+    for (x = 0; x < 658; x += 73)
+    {
+        cairo_rectangle(cr, x, 0,
+            2, 658);
+        cairo_fill(cr);
+	cairo_rectangle(cr, 0, x,
+           658, 2);
+        cairo_fill(cr);
+    }
+
+    return FALSE;
+}
+
+void generate_sud(GtkButton* button, gpointer user_data)
+{
+    GtkBuilder* builder = gtk_builder_new();
+    GError* error = NULL;
+    if (gtk_builder_add_from_file(builder, "create_sudoku.glade", &error) == 0)
+    {
+        g_printerr("Error loading file: %s\n", error->message);
+        g_clear_error(&error);
+    }
+    else
+    {
+	GtkWindow* w = GTK_WINDOW(gtk_builder_get_object(builder, "create_sudoku"));
+        GtkDrawingArea* area = GTK_DRAWING_AREA(gtk_builder_get_object(builder, "area"));
+
+        gtk_widget_show_all(GTK_WIDGET(w));
+        g_signal_connect_swapped(G_OBJECT(w), "destroy", G_CALLBACK(close_window), NULL);
+	g_signal_connect(area, "draw", G_CALLBACK(on_draw), NULL);
+    }
+
+}
+
 int main (int argc, char *argv[])
 {
     // Initializes GTK.
@@ -509,6 +596,7 @@ int main (int argc, char *argv[])
     GtkCheckButton* bw = GTK_CHECK_BUTTON(gtk_builder_get_object(builder, "bw"));
     GtkCheckButton* Grid = GTK_CHECK_BUTTON(gtk_builder_get_object(builder, "Grid"));
     GtkImage *img = GTK_IMAGE(gtk_builder_get_object(builder, "img_sud"));
+    GtkButton* generate = GTK_BUTTON(gtk_builder_get_object(builder, "generate"));
 
     App app =
     {
@@ -538,7 +626,24 @@ int main (int argc, char *argv[])
             .IA = IA,
             .bw = bw,
             .Grid = Grid,
-        }
+	    .Generate = generate,
+        },
+	.sud =
+	{
+	    .new = NULL,
+	    .add = NULL,
+	    .back = NULL,
+	    ._0 = NULL,
+	    ._1 = NULL,
+	    ._2 = NULL,
+	    ._3 = NULL,
+	    ._4 = NULL,
+	    ._5 = NULL,
+	    ._6 = NULL,
+	    ._7 = NULL,
+	    ._8 = NULL,
+	    ._9 = NULL,
+	}
     };
 
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(Auto), TRUE);
@@ -563,6 +668,7 @@ int main (int argc, char *argv[])
     g_signal_connect(IA, "clicked", G_CALLBACK(IA_recognition), &app);
     g_signal_connect(bw, "clicked", G_CALLBACK(BlackWhite), &app);
     g_signal_connect(Grid, "clicked", G_CALLBACK(GridDetec), &app);
+    g_signal_connect(generate, "clicked", G_CALLBACK(generate_sud), &app);
 
     // Runs the main loop.
     gtk_main();
