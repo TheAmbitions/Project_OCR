@@ -976,13 +976,13 @@ int main(int argc,char *argv[])
     update_surface(screen_surface, image_surface);
 	wait_for_keypressed();
 
-   
     int angle= RotationAuto(image_surface,0,0);
 
     if (angle>35)
     {
         image_surface=SDL_RotationCentralN(image_surface,angle-1);
     }
+
     image_surface = kernel(image_surface);
 
     update_surface(screen_surface, image_surface);
@@ -991,7 +991,7 @@ int main(int argc,char *argv[])
 
  	wait_for_keypressed();
 
-    SDL_SaveBMP(image_surface,"hihihi.bmp");	
+    SDL_SaveBMP(image_surface,"hihih.bmp");	
 	SDL_FreeSurface(image_surface);
 
 	SDL_FreeSurface(screen_surface);
