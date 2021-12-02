@@ -10,6 +10,8 @@
 #include "display.h"
 #include "rotations.h"
 #include "otsu.h"
+#include "resolve.h"
+#include "display_sudoku.h"
 
 typedef struct UserInterface
 {
@@ -251,8 +253,49 @@ void on_save(GtkButton *button, gpointer user_data)
     }
 }
 
+void display_result()
+{
+    GtkBuilder* builder = gtk_builder_new();
+    GError* error = NULL;
+    if (gtk_builder_add_from_file(builder, "show_window.glade", &error) == 0)
+    {
+        g_printerr("Error loading file: %s\n", error->message);
+        g_clear_error(&error);
+    }
+    else
+    {
+        GtkWindow* w = GTK_WINDOW(gtk_builder_get_object(builder, "window"));
+        GtkImage* img = GTK_IMAGE(gtk_builder_get_object(builder, "img"));
+
+        gtk_widget_show_all(GTK_WIDGET(w));
+        gtk_image_set_from_file(img, "tmp_img/result.bmp");
+        g_signal_connect_swapped(G_OBJECT(w), "destroy", G_CALLBACK(close_window), NULL);
+    }
+}
+
 void resolve_generate(App *app)
 {
+    if (resolve() == 0)
+    {
+	GtkWidget* dialog;
+        GtkDialogFlags flags = GTK_DIALOG_DESTROY_WITH_PARENT;
+        dialog = gtk_message_dialog_new_with_markup(app->ui.window,
+            flags,
+            GTK_MESSAGE_ERROR,
+            GTK_BUTTONS_CLOSE,
+            "Error!\n\nCould not resolve!\n\nPlease, verify that the sudoku is resolvable,\nor there was a probleme in the network.");
+
+        gtk_dialog_run(GTK_DIALOG(dialog));
+        g_signal_connect_swapped(dialog, "response",
+            G_CALLBACK(gtk_widget_destroy),
+            dialog);
+        gtk_widget_destroy(dialog);
+    }
+    else
+    {
+	apply_display();
+	display_result();
+    }
 }
 
 void on_resolve(GtkButton *button, gpointer user_data)
@@ -329,7 +372,6 @@ void on_resolve(GtkButton *button, gpointer user_data)
 	    g_print("Resolve_auto\n");
 	else
 	    g_print("resolve_manuel\n");
-	g_print("On peut résoudre\n");
 	app->is_resolve = 1;
     }
 }
@@ -699,6 +741,28 @@ void add_to_resolve(GtkButton *button, gpointer user_data)
     SDL_SaveBMP(app->sud.surface, "tmp_img/create_sud.bmp");
     gtk_image_set_from_file(app->image.img, "tmp_img/create_sud.bmp");
     app->is_generate = 1;
+
+    FILE* file = NULL;
+    file = fopen("sudoku.txt", "w");
+
+    if (file != NULL)
+    {
+        for (int i = 0; i < 9; i++)
+        {
+            for (int j = 0; j < 9; j++)
+	    {
+		if (app->sud.grid[i * 9 + j] == 0)
+		    fprintf(file, ".");
+	        else	
+                    fprintf(file, "%d", app->sud.grid[i * 9 + j]);
+	    }
+            fprintf(file, "\n");
+        }
+            fclose(file);
+    }
+    else
+        errx(1, "Error : cannot create the file");
+
     gtk_widget_destroy(GTK_WIDGET(app->sud.win));
 }
 

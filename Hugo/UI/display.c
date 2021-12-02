@@ -64,7 +64,7 @@ void wait_for_keypressed()
     } while(event.type != SDL_KEYUP);
 }
 
-void display(char path[])
+void __display(char path[])
 {
     SDL_Surface* image_surface;
     SDL_Surface* screen_surface;

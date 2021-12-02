@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <err.h>
 
+#define MAX_SIZE 12
+
 void print_grid(int grid[9][9])
 {
 	for (int i = 0; i < 9; i++)
@@ -127,7 +129,7 @@ int resolve()
 	int grid[9][9];
 
 	initialisation_array(grid);
-	input_sudoku("sudoku_test.txt", grid);
+	input_sudoku("sudoku.txt", grid);
 	// Resolve the grid
 	if (BruteSolve(grid, 0, 0) == 1)
 	{
