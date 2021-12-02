@@ -159,6 +159,7 @@ void on_show(GtkButton *button, gpointer user_data)
         g_signal_connect_swapped(dialog, "response",
             G_CALLBACK(gtk_widget_destroy),
             dialog);
+	gtk_widget_destroy(dialog);
     }
     else 
     {
@@ -199,6 +200,7 @@ void on_save(GtkButton *button, gpointer user_data)
         g_signal_connect_swapped(dialog, "response",
             G_CALLBACK(gtk_widget_destroy),
             dialog);
+	gtk_widget_destroy(dialog);
     }
     else if (app->is_resolve == 0)
     {
@@ -214,6 +216,7 @@ void on_save(GtkButton *button, gpointer user_data)
         g_signal_connect_swapped(dialog, "response",
             G_CALLBACK(gtk_widget_destroy),
             dialog);
+	gtk_widget_destroy(dialog);
     }
     else
     {
@@ -259,6 +262,7 @@ void on_resolve(GtkButton *button, gpointer user_data)
         g_signal_connect_swapped(dialog, "response",
             G_CALLBACK(gtk_widget_destroy),
             dialog);
+	gtk_widget_destroy(dialog);
     }
     else if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(app->ui.Manual))
 		&& (!gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(app->ui.IA))
@@ -277,6 +281,7 @@ void on_resolve(GtkButton *button, gpointer user_data)
         g_signal_connect_swapped(dialog, "response",
             G_CALLBACK(gtk_widget_destroy),
             dialog);
+	gtk_widget_destroy(dialog);
     }
     else
     {
@@ -301,6 +306,7 @@ void on_resolve(GtkButton *button, gpointer user_data)
                 g_signal_connect_swapped(dialog, "response",
                     G_CALLBACK(gtk_widget_destroy),
                     dialog);
+		gtk_widget_destroy(dialog);
 		free(str);
 		return;
 	    }
@@ -415,6 +421,7 @@ gboolean value_changed(GtkWidget* widget, gpointer user_data)
         g_signal_connect_swapped(dialog, "response",
             G_CALLBACK(gtk_widget_destroy),
             dialog);
+	gtk_widget_destroy(dialog);
 	return 0;
     }
 
@@ -467,6 +474,7 @@ gboolean BlackWhite(GtkWidget* widget, gpointer user_data)
         g_signal_connect_swapped(dialog, "response",
             G_CALLBACK(gtk_widget_destroy),
             dialog);
+	gtk_widget_destroy(dialog);
 	return 0;
     }
 
@@ -519,6 +527,24 @@ gboolean GridDetec(GtkWidget* widget, gpointer user_data)
     return 0;
 }
 
+void draw_square(App* app)
+{
+    SDL_Surface* sur = load_image("UI_img/carre.png");
+    size_t i, j;
+    Uint32 p;
+    for (i = 0; i < sur->h; i++)
+        for (j = 0; j < sur->w; j++)
+        {
+            p = get_pixel(sur, j, i);
+            put_pixel(app->sud.surface, 
+                        app->sud.posx + j, 
+                        app->sud.posy + i, p);
+        }
+    SDL_SaveBMP(app->sud.surface, "tmp_img/create_grid.bmp");
+    gtk_image_set_from_file(app->sud.img, "tmp_img/create_grid.bmp");
+    SDL_FreeSurface(sur);
+}
+
 void update_pos(App* app)
 {
     if (app->sud.posy > 658)
@@ -533,6 +559,8 @@ void update_pos(App* app)
     	     app->sud.posx = 4;
 	     app->sud.posy += 73;
         }
+	if (app->sud.posy <= 658)
+	    draw_square(app);
     }
 }
 
@@ -562,6 +590,75 @@ void add_1(GtkButton *button, gpointer user_data)
     draw_fig(app);
 }
 
+void add_2(GtkButton *button, gpointer user_data)
+{
+    App* app = user_data;
+    app->sud.file = "UI_img/2.png";
+    draw_fig(app);
+}
+
+void add_3(GtkButton *button, gpointer user_data)
+{
+    App* app = user_data;
+    app->sud.file = "UI_img/3.png";
+    draw_fig(app);
+}
+
+void add_4(GtkButton *button, gpointer user_data)
+{
+    App* app = user_data;
+    app->sud.file = "UI_img/4.png";
+    draw_fig(app);
+}
+
+void add_5(GtkButton *button, gpointer user_data)
+{
+    App* app = user_data;
+    app->sud.file = "UI_img/5.png";
+    draw_fig(app);
+}
+
+void add_6(GtkButton *button, gpointer user_data)
+{
+    App* app = user_data;
+    app->sud.file = "UI_img/6.png";
+    draw_fig(app);
+}
+
+void add_7(GtkButton *button, gpointer user_data)
+{
+    App* app = user_data;
+    app->sud.file = "UI_img/7.png";
+    draw_fig(app);
+}
+
+void add_8(GtkButton *button, gpointer user_data)
+{
+    App* app = user_data;
+    app->sud.file = "UI_img/8.png";
+    draw_fig(app);
+}
+
+void add_9(GtkButton *button, gpointer user_data)
+{
+    App* app = user_data;
+    app->sud.file = "UI_img/9.png";
+    draw_fig(app);
+}
+
+void add_0(GtkButton *button, gpointer user_data)
+{
+    App* app = user_data;
+    update_pos(app);
+    draw_square(app);
+}
+
+void add_to_resolve(GtkButton *button, gpointer user_data)
+{
+    App* app = user_data;
+    g_print("%s\n", app->sud.file);
+}
+
 void generate_sud(GtkButton* button, gpointer user_data)
 {
     App* app = user_data;
@@ -576,18 +673,49 @@ void generate_sud(GtkButton* button, gpointer user_data)
     {
 	GtkWindow* w = GTK_WINDOW(gtk_builder_get_object(builder, "create_sudoku"));
 	GtkImage* img = GTK_IMAGE(gtk_builder_get_object(builder, "image"));
+	GtkButton* add = GTK_BUTTON(gtk_builder_get_object(builder, "add"));
 	GtkButton* _1 = GTK_BUTTON(gtk_builder_get_object(builder, "1"));
-        
+        GtkButton* _2 = GTK_BUTTON(gtk_builder_get_object(builder, "2"));
+	GtkButton* _3 = GTK_BUTTON(gtk_builder_get_object(builder, "3"));
+	GtkButton* _4 = GTK_BUTTON(gtk_builder_get_object(builder, "4"));
+	GtkButton* _5 = GTK_BUTTON(gtk_builder_get_object(builder, "5"));
+	GtkButton* _6 = GTK_BUTTON(gtk_builder_get_object(builder, "6"));
+	GtkButton* _7 = GTK_BUTTON(gtk_builder_get_object(builder, "7"));
+	GtkButton* _8 = GTK_BUTTON(gtk_builder_get_object(builder, "8"));
+	GtkButton* _9 = GTK_BUTTON(gtk_builder_get_object(builder, "9"));
+        GtkButton* _0 = GTK_BUTTON(gtk_builder_get_object(builder, "0"));
+
 	app->sud.win = w;
 	app->sud.img = img;
+	app->sud.add = add;
 	app->sud.surface = load_image("UI_img/grid.png");
 	app->sud._1 = _1;
+	app->sud._2 = _2;
+	app->sud._3 = _3;
+	app->sud._4 = _4;
+	app->sud._5 = _5;
+	app->sud._6 = _6;
+	app->sud._7 = _7;
+	app->sud._8 = _8;
+	app->sud._9 = _9;
+        app->sud._0 = _0;
+
+	draw_square(app);
 
         gtk_widget_show_all(GTK_WIDGET(w));
         g_signal_connect_swapped(G_OBJECT(w), "destroy", G_CALLBACK(close_window), NULL);
+	g_signal_connect(G_OBJECT(add), "clicked", G_CALLBACK(add_to_resolve), app);
 	g_signal_connect(G_OBJECT(_1), "clicked", G_CALLBACK(add_1), app);
+	g_signal_connect(G_OBJECT(_2), "clicked", G_CALLBACK(add_2), app);
+	g_signal_connect(G_OBJECT(_3), "clicked", G_CALLBACK(add_3), app);
+	g_signal_connect(G_OBJECT(_4), "clicked", G_CALLBACK(add_4), app);
+	g_signal_connect(G_OBJECT(_5), "clicked", G_CALLBACK(add_5), app);
+	g_signal_connect(G_OBJECT(_6), "clicked", G_CALLBACK(add_6), app);
+	g_signal_connect(G_OBJECT(_7), "clicked", G_CALLBACK(add_7), app);
+	g_signal_connect(G_OBJECT(_8), "clicked", G_CALLBACK(add_8), app);
+	g_signal_connect(G_OBJECT(_9), "clicked", G_CALLBACK(add_9), app);
+	g_signal_connect(G_OBJECT(_0), "clicked", G_CALLBACK(add_0), app);
     }
-
 }
 
 int main (int argc, char *argv[])
