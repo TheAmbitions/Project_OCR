@@ -257,6 +257,56 @@ SDL_Surface* kernel (SDL_Surface* image_surface)
 }
 
 
+void recognition(char image[], double *ecar)
+{
+        SDL_Surface* image_surface;
+
+        //if(SDL_Init(SDL_INIT_VIDEO) == -1)
+                //errx(1,"Could not initialize SDL: %s.\n", SDL_GetError());
+
+        image_surface = IMG_Load(image);
+        if (!image_surface)
+                errx(3, "can't load %s: %s", image, IMG_GetError());
+
+        // div: average of a width of one box
+        int div = (image_surface->w / *ecar);
+
+        SDL_Surface *img = NULL;
+        SDL_Surface *surface = NULL;
+        SDL_Rect spriteCoord, spriteSrc;
+
+        spriteCoord.x = spriteCoord.y = 0;
+        spriteSrc.w = div;
+        spriteSrc.h = div;
+        spriteSrc.x = 0;
+        spriteSrc.y = 0;
+
+        int count = 0;
+        for (int i = 0; i < 9; i++)
+        {
+                for (int j = 0; j < 9; j++)
+                {
+                        surface = SDL_CreateRGBSurface (0, div, div, 32, 0, 0, 0, 0);
+                        SDL_BlitSurface(image_surface, &spriteSrc, surface, &spriteCoord);
+                        SDL_SaveBMP(surface, "image.bmp");
+                        if (count < 9)
+                        {
+                                display("image.bmp");
+                                count++;
+                        }
+                        spriteSrc.x += div;
+                }
+
+                spriteSrc.x = 0;
+                spriteSrc.y += div;
+       }
+
+        SDL_FreeSurface(img);
+        SDL_FreeSurface(image_surface);
+        SDL_FreeSurface(surface);
+        SDL_Quit();
+}
+
 
 #define PI 3.1415927
 
@@ -345,10 +395,10 @@ accum[], double accum_seuil[])
     if (i>=20&&i<100)
     {
      
-        int t = search(lignes, 2*nb);
+        double *ecar = search(lignes, 2*nb);
         double l[16];
         int j = 0;
-        for (int i = 0; i < t; i += 2)
+        for (int i = 0; i < 8; i += 2)
         //for (int i = 0; i < nb*2; i += 2)      
         {
             //printf("draw\n");
@@ -393,6 +443,7 @@ accum[], double accum_seuil[])
         }
         SDL_SaveBMP(surface, "test.bmp");
         printf("apres\n");
+        recognition("test.bmp", ecar);
         return dest;
     }
 

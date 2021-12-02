@@ -249,7 +249,7 @@ void fin (double l[], int t, double *eca)
     }
 }
 
-int search (double l[], int len)
+void search (double l[], int len, double *eca)
 {
     double moy = moyenne (l , len , 1, 2);
     printf("moyenne = %lf", moy);
@@ -295,7 +295,7 @@ int search (double l[], int len)
     int t1 = gauss(l1,nb,eca1, moy1);
     int t2 = gauss(l2,nb2,eca2,moy2);
 
-    double* eca;
+    //double* eca;
     double tmp = 0;
     eca = &tmp;
     t1 = ecar(l1,t1,eca);
@@ -346,6 +346,5 @@ int search (double l[], int len)
         printf("    rho:  %lf\n    theta:%lf\n    use:  %lf\n\n", l2[i],l2[i+1],l2[i+2]);
     }
     printf("fin de la liste 2\n\n");*/
-    return 8;
 }   
 
