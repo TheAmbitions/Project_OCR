@@ -104,8 +104,7 @@ return destination;
 
     varBetween=sqrt(E2);
     
-    printf("%f\n",varBetween);
-    printf("%f\n",varMax);
+    
 
     if(anglevarMax<=45 && anglevarMax>=0)
     {
@@ -128,13 +127,6 @@ return destination;
         anglevarMax = -anglevarMax;
         img=SDL_RotationCentralN (img, anglevarMax);
     }
- 
-    /*if (anglevarMax>40 && varBetween<varMax)
-    {
-        anglevarMax = 0;
-        anglevarMax -=10;
-        img=SDL_RotationCentralN (img, -10);
-    }*/
     return anglevarMax;
     
 }

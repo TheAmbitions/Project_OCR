@@ -264,7 +264,6 @@ SDL_Surface* kernel (SDL_Surface* image_surface)
 SDL_Surface* hough(SDL_Surface* img, SDL_Surface* dest, int seuil, double
 accum[], double accum_seuil[])
 {
-    printf("START HOUGH\n");
     Uint32 pixel;
     Uint8 r,g,b;
 
@@ -277,12 +276,9 @@ accum[], double accum_seuil[])
     double Nrho = floor( sqrt(width * width + height * height))/rho;
     double dtheta = PI / Ntheta;
     double drho = floor(sqrt(width * width + height * height))/Nrho;
-    printf("avant crash due to -> %i\n",(int) (Ntheta * Nrho));
-    //double accum[(int) (Ntheta * Nrho)];
-    printf("test\n");
 
     double i_rho;
-    printf ("seuil = %i\n",seuil);
+    //printf ("seuil = %i\n",seuil);
 
     for (double i = 0; i < Ntheta * Nrho; i++)
         accum[(int) i] = 0;
@@ -306,7 +302,6 @@ accum[], double accum_seuil[])
             }
         }
     }
-    printf("Fin boucle 1\n");
     int nb = 0;
     //double accum_seuil[(int) (Ntheta * Nrho)];
     for (double i = 0; i < Ntheta * Nrho; i++)
@@ -325,7 +320,6 @@ accum[], double accum_seuil[])
 
         }
     }
-    printf("Fin boucle 2\n");
 
     double lignes[nb*2];
     int i = 0;
@@ -352,7 +346,6 @@ accum[], double accum_seuil[])
     {
      
         int t = search(lignes, 2*nb);
-        printf("\n--->draw<---\n");
         for (int i = 0; i < t; i += 2)
         //for (int i = 0; i < nb*2; i += 2)      
         {
@@ -376,9 +369,8 @@ accum[], double accum_seuil[])
     else
     {
         if (i<20)
-            return hough(img,dest,seuil -10,accum, accum_seuil);
-        printf("seuil too hight\n\n");
-        return hough(img,dest,seuil +10,accum, accum_seuil);
+            return hough(img,dest,seuil -20,accum, accum_seuil);
+        return hough(img,dest,seuil +20,accum, accum_seuil);
     }
 
 
@@ -428,7 +420,7 @@ int main(int argc,char *argv[])
  	
 	//image_traite = Filter(image_surface);
 	//otsu(image_traite);
-    otsu(image_traite);
+        otsu(image_traite);
 	screen_surface =  display_image(image_traite);
 	wait_for_keypressed();
 	//image_surface = sobel(image_surface);
@@ -442,7 +434,7 @@ int main(int argc,char *argv[])
     	{
             image_traite=SDL_RotationCentralN(image_traite,angle+1);
     	}	
-    	SDL_SaveBMP(image_traite, "hihi.bmp");
+        noiseReduction(image_traite);
 	image_traite = kernel(image_traite);
 	update_surface(screen_surface, image_traite);
 	screen_surface =  display_image(image_traite);
@@ -459,7 +451,9 @@ int main(int argc,char *argv[])
     printf("avant hough\n\n\n");
     image_surface = hough(image_traite, image_traite,240, accum, accum_seuil);
     printf("apres hough\n\n");
-    
+    SDL_SaveBMP(image_traite, "hihi.bmp");
+
+
 	update_surface(screen_surface, image_traite);
 	
 	//update_surface(screen_surface, image_surface);

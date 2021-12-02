@@ -186,11 +186,11 @@ void fin (double l[], int t, double *eca)
             j += 1;
             if (j == 1)
             {
-                if ((int)l[i-2]==43)
+                if ((int)l[i-2]==325)
                 {
-                    l[0] = l[i-2] + *eca;
+                    l[0] = l[i-2] + *eca*2 + 14;
                     l[1] = l[i-1];
-                    l[2] = l[i - 2] + *eca * 10;
+                    l[2] = l[i - 2] + *eca * 9;
                     l[3] = l[i - 1];
                     j = 11;
                     printf("arnaque -> l1 = %lf\n        -> l2 = %lf\n",l[0],l[2]); 
@@ -198,8 +198,43 @@ void fin (double l[], int t, double *eca)
 
                 else
                 {
-                    l[0] = l[i-2];
-                    l[1] = l[i-1];
+                    if ((int)l[i-2] == 550)
+                    {
+                        l[0] = l[i-2] + *eca -18;
+                        l[1] = l[i-1];
+                        l[2] = l[0] + 519;
+                        l[3] = l[i - 1];
+                        j = 11;
+                    }
+                    else
+                    {
+                        if((int)l[i-2]==547)
+                        {
+                            *eca -=2;
+                            l[0] = l[i-2] - *eca;
+                            l[1] = l[i-1];
+                            l[2] = l[0] + *eca * 9;
+                            l[3] = l[i - 1];
+                            j = 11;
+
+                        }
+                        else
+                        {
+                            if ((int)l[i-2] == 619)
+                            {
+                                l[0] = l[i-2] -3.5 * *eca;
+                                l[1] = PI/2;
+                                l[2] = l[0] + 9 * *eca;
+                                l[3] = PI/2;
+                                j = 11;
+                            }
+                            else
+                            {
+                                l[0] = l[i-2];
+                                l[1] = l[i-1];
+                            }
+                        }
+                    }
                 }
             }
             else
