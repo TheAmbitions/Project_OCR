@@ -192,8 +192,7 @@ void fin (double l[], int t, double *eca)
                     l[1] = l[i-1];
                     l[2] = l[i - 2] + *eca * 9;
                     l[3] = l[i - 1];
-                    j = 11;
-                    printf("arnaque -> l1 = %lf\n        -> l2 = %lf\n",l[0],l[2]); 
+                    j = 11; 
                 }
 
                 else

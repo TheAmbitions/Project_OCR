@@ -346,6 +346,8 @@ accum[], double accum_seuil[])
     {
      
         int t = search(lignes, 2*nb);
+        double l[16];
+        int j = 0;
         for (int i = 0; i < t; i += 2)
         //for (int i = 0; i < nb*2; i += 2)      
         {
@@ -358,11 +360,39 @@ accum[], double accum_seuil[])
             x0 = a * rho;
             y0 = m * rho;
             x1  = (x0 + 1000 * (-m));
+            l[j] = x1;
             y1 = (y0 + 1000 * (a));
+            l[j+1] = y1;
             x2 = (x0 - 1000 *(-m));
+            l[j+2] = x2;
             y2 = (y0 - 1000 * (a));
-            dest = drawLine(dest,(int)x1, (int)y1, (int)x2,(int)y2);    
+            l[j+3] = y2;
+            j += 4;
+            //dest = drawLine(dest,(int)x1, (int)y1, (int)x2,(int)y2);    
         }
+        SDL_Rect rect,cord;
+        cord.x = 0;
+        cord.y = 0;
+        rect.w = l[4] - l[0];
+        printf("rect.w = %lf\n",l[4] - l[0]);
+        rect.h = l[13] -l[9]; 
+        printf("rect.h = %lf\n",l[13] -l[9]);
+        rect.x = l[0];
+        printf("rect.x = %lf\n", l[0]);
+        rect.y = l[9];
+        printf("rect.y = %lf\n",l[9]);
+        SDL_Surface* surface = SDL_CreateRGBSurface (0, rect.w,rect.h, 32, 0,
+        0, 0, 0);
+        SDL_BlitSurface(dest, &rect, surface, &cord);
+        /*Uint32 pixel = SDL_MapRGB(dest->format,0,255,0);
+        put_pixel(dest, l[0],l[9],pixel);*/
+        printf("save crash\n");
+        if (surface == NULL)
+        {
+            printf("error surface\n");
+        }
+        SDL_SaveBMP(surface, "test.bmp");
+        printf("apres\n");
         return dest;
     }
 
@@ -392,7 +422,7 @@ int main(int argc,char *argv[])
 	init_sdl();
 
 	image_surface = load_image(filename);
-    SDL_Surface*  image_traite = image_surface;
+
 	
 	Uint32 pixel;
 	int w;
@@ -419,42 +449,46 @@ int main(int argc,char *argv[])
   	}
  	
 	//image_traite = Filter(image_surface);
-	//otsu(image_traite);
-        otsu(image_traite);
-	screen_surface =  display_image(image_traite);
+	//otsu(image_surface);
+    
+    otsu(image_surface);
+	screen_surface =  display_image(image_surface);
 	wait_for_keypressed();
 	//image_surface = sobel(image_surface);
-	int angle= RotationAuto(image_traite,0,0);
+	int angle= RotationAuto(image_surface,0,0);
 	printf("angle = %i\n",angle);
         if (angle>35)
         {
-            image_traite=SDL_RotationCentralN(image_traite,angle-1);
+            image_surface=SDL_RotationCentralN(image_surface,angle-1);
         }
         if (angle<0)
     	{
-            image_traite=SDL_RotationCentralN(image_traite,angle+1);
+            image_surface=SDL_RotationCentralN(image_surface,angle+1);
     	}	
-        noiseReduction(image_traite);
-	image_traite = kernel(image_traite);
-	update_surface(screen_surface, image_traite);
-	screen_surface =  display_image(image_traite);
+        noiseReduction(image_surface);
+		update_surface(screen_surface, image_surface);
+	screen_surface =  display_image(image_surface);
 	wait_for_keypressed();
-	printf("new w = %i\nnew h = %i",image_traite->w,image_traite->h);
+	SDL_SaveBMP(image_surface, "hihi.bmp");
+    SDL_Surface* image_traite = load_image("hihi.bmp");
+    image_traite = kernel(image_traite);
+
 
 	//update_surface(screen_surface, image_surface);
 	//wait_for_keypressed();
 
+ 
     double accum[(int)floor(sqrt(image_traite->w*image_traite->w +
     image_traite->h*image_traite->h)) * 180];
     double accum_seuil[(int)floor(sqrt(image_traite->w*image_traite->w +
     image_traite->h*image_traite->h)) * 180];
     printf("avant hough\n\n\n");
-    image_surface = hough(image_traite, image_traite,240, accum, accum_seuil);
+    image_surface = hough(image_traite, image_surface,240, accum, accum_seuil);
     printf("apres hough\n\n");
-    SDL_SaveBMP(image_traite, "hihi.bmp");
+    SDL_SaveBMP(image_surface, "hihi.bmp");
 
 
-	update_surface(screen_surface, image_traite);
+	update_surface(screen_surface, image_surface);
 	
 	//update_surface(screen_surface, image_surface);
 	wait_for_keypressed();
