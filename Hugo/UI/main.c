@@ -26,6 +26,7 @@ typedef struct UserInterface
     GtkCheckButton *bw;
     GtkCheckButton *Grid;
     GtkButton *Generate;
+    GtkButton *web;
 }UserInterface;
 
 typedef struct Create_sudoku
@@ -33,7 +34,7 @@ typedef struct Create_sudoku
     char *file;
     int posx;
     int posy;
-    int *grid;
+    int grid[81];
     int gridx;
     int gridy;
     SDL_Surface* surface;
@@ -680,7 +681,13 @@ void add_0(GtkButton *button, gpointer user_data)
 {
     App* app = user_data;
     draw_square(app, "UI_img/blanc.png");
+    //*(app->sud.grid + app->sud.gridy * 9 + app->sud.gridx) = 0;
     update_pos(app);
+}
+
+void quit(App* app, gpointer w)
+{
+    gtk_widget_destroy(GTK_WIDGET(w));
 }
 
 void add_to_resolve(GtkButton *button, gpointer user_data)
@@ -693,13 +700,6 @@ void add_to_resolve(GtkButton *button, gpointer user_data)
     gtk_image_set_from_file(app->image.img, "tmp_img/create_sud.bmp");
     app->is_generate = 1;
     gtk_widget_destroy(GTK_WIDGET(app->sud.win));
-    free(app->sud.grid);
-}
-
-void quit(App* app, gpointer w)
-{
-    free(app->sud.grid);
-    gtk_widget_destroy(GTK_WIDGET(w));
 }
 
 void generate_sud(GtkButton* button, gpointer user_data)
@@ -747,7 +747,9 @@ void generate_sud(GtkButton* button, gpointer user_data)
 	app->sud._9 = _9;
         app->sud._0 = _0;
 
-	app->sud.grid = calloc(81, sizeof(int));
+	for (int i = 0; i < 9; i++)
+	    for (int j = 0; j < 9; j++)
+		 app->sud.grid[i * 9 + j] = 0;
 
 	draw_square(app, "UI_img/carre.png");
 
@@ -765,6 +767,13 @@ void generate_sud(GtkButton* button, gpointer user_data)
 	g_signal_connect(G_OBJECT(_9), "clicked", G_CALLBACK(add_9), app);
 	g_signal_connect(G_OBJECT(_0), "clicked", G_CALLBACK(add_0), app);
     }
+}
+
+void open_website(GtkButton* button, gpointer user_data)
+{
+    int cr = system("firefox https://theambitionsocr.webflow.io/");
+    if (cr != 0)
+        g_print("rate\n");
 }
 
 int main (int argc, char *argv[])
@@ -801,6 +810,8 @@ int main (int argc, char *argv[])
     GtkCheckButton* Grid = GTK_CHECK_BUTTON(gtk_builder_get_object(builder, "Grid"));
     GtkImage *img = GTK_IMAGE(gtk_builder_get_object(builder, "img_sud"));
     GtkButton* generate = GTK_BUTTON(gtk_builder_get_object(builder, "generate"));
+    GtkButton* web = GTK_BUTTON(gtk_builder_get_object(builder, "web"));
+    
 
     App app =
     {
@@ -832,13 +843,14 @@ int main (int argc, char *argv[])
             .bw = bw,
             .Grid = Grid,
 	    .Generate = generate,
+	    .web = web,
         },
 	.sud =
 	{
 	    .file = "",
 	    .posx = 4,
 	    .posy = 4,
-	    .grid = NULL,
+	    .grid = {},
 	    .gridx = 0,
 	    .gridy = 0,
 	    .surface = NULL,
@@ -883,6 +895,7 @@ int main (int argc, char *argv[])
     g_signal_connect(bw, "clicked", G_CALLBACK(BlackWhite), &app);
     g_signal_connect(Grid, "clicked", G_CALLBACK(GridDetec), &app);
     g_signal_connect(generate, "clicked", G_CALLBACK(generate_sud), &app);
+    g_signal_connect(web, "clicked", G_CALLBACK(open_website), &app);
 
     // Runs the main loop.
     gtk_main();
@@ -891,7 +904,6 @@ int main (int argc, char *argv[])
     SDL_FreeSurface(app.dis_img);
     SDL_FreeSurface(app.image.otsu_img);
     SDL_FreeSurface(app.image.rot_img);
-    SDL_FreeSurface(app.sud.surface);
 
     // Exits.
     return 0;
