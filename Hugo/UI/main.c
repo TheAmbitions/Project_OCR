@@ -33,6 +33,9 @@ typedef struct Create_sudoku
     char *file;
     int posx;
     int posy;
+    int *grid;
+    int gridx;
+    int gridy;
     SDL_Surface* surface;
     GtkWindow *win;
     GtkImage* img;
@@ -64,6 +67,7 @@ typedef struct Application
     int is_rot;
     int is_resolve;
     int is_otsu;
+    int is_generate;
     SDL_Surface* image_surface;
     SDL_Surface* dis_img;
     
@@ -128,6 +132,7 @@ void openfile(GtkButton *button, gpointer user_data)
         app->is_resolve = 0;
 	app->is_otsu = 0;
 	app->is_rot = 0;
+	app->is_generate = 0;
 	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(app->ui.bw), FALSE);
         break;
     }
@@ -245,6 +250,10 @@ void on_save(GtkButton *button, gpointer user_data)
     }
 }
 
+void resolve_generate(App *app)
+{
+}
+
 void on_resolve(GtkButton *button, gpointer user_data)
 {
     App* app = user_data;
@@ -312,6 +321,13 @@ void on_resolve(GtkButton *button, gpointer user_data)
 	    }
 	    free(str);
 	}
+
+	if (app->is_generate == 1)
+	    resolve_generate(app);
+	else if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(app->ui.Auto)) == TRUE)
+	    g_print("Resolve_auto\n");
+	else
+	    g_print("resolve_manuel\n");
 	g_print("On peut résoudre\n");
 	app->is_resolve = 1;
     }
@@ -527,9 +543,9 @@ gboolean GridDetec(GtkWidget* widget, gpointer user_data)
     return 0;
 }
 
-void draw_square(App* app)
+void draw_square(App* app, char* path)
 {
-    SDL_Surface* sur = load_image("UI_img/carre.png");
+    SDL_Surface* sur = load_image(path);
     size_t i, j;
     Uint32 p;
     for (i = 0; i < sur->h; i++)
@@ -554,18 +570,23 @@ void update_pos(App* app)
     else
     {
         app->sud.posx += 73;
+	app->sud.gridx++;
         if (app->sud.posx > 658)
         {
     	     app->sud.posx = 4;
+	     app->sud.gridx = 0;
 	     app->sud.posy += 73;
+	     app->sud.gridy++;
         }
-	if (app->sud.posy <= 658)
-	    draw_square(app);
+	if (app->sud.posy < 658)
+	    draw_square(app, "UI_img/carre.png");
     }
 }
 
 void draw_fig(App* app)
 {
+    if (app->sud.posy >= 658)
+	return;
     SDL_Surface* sur = load_image(app->sud.file);
     size_t i, j;
     Uint32 p;
@@ -587,6 +608,7 @@ void add_1(GtkButton *button, gpointer user_data)
 {
     App* app = user_data;
     app->sud.file = "UI_img/1.png";
+    *(app->sud.grid + app->sud.gridy * 9 + app->sud.gridx) = 1;
     draw_fig(app);
 }
 
@@ -594,6 +616,7 @@ void add_2(GtkButton *button, gpointer user_data)
 {
     App* app = user_data;
     app->sud.file = "UI_img/2.png";
+    *(app->sud.grid + app->sud.gridy * 9 + app->sud.gridx) = 2;
     draw_fig(app);
 }
 
@@ -601,6 +624,7 @@ void add_3(GtkButton *button, gpointer user_data)
 {
     App* app = user_data;
     app->sud.file = "UI_img/3.png";
+    *(app->sud.grid + app->sud.gridy * 9 + app->sud.gridx) = 3;
     draw_fig(app);
 }
 
@@ -608,6 +632,7 @@ void add_4(GtkButton *button, gpointer user_data)
 {
     App* app = user_data;
     app->sud.file = "UI_img/4.png";
+    *(app->sud.grid + app->sud.gridy * 9 + app->sud.gridx) = 4;
     draw_fig(app);
 }
 
@@ -615,6 +640,7 @@ void add_5(GtkButton *button, gpointer user_data)
 {
     App* app = user_data;
     app->sud.file = "UI_img/5.png";
+    *(app->sud.grid + app->sud.gridy * 9 + app->sud.gridx) = 5;
     draw_fig(app);
 }
 
@@ -622,6 +648,7 @@ void add_6(GtkButton *button, gpointer user_data)
 {
     App* app = user_data;
     app->sud.file = "UI_img/6.png";
+    *(app->sud.grid + app->sud.gridy * 9 + app->sud.gridx) = 6;
     draw_fig(app);
 }
 
@@ -629,6 +656,7 @@ void add_7(GtkButton *button, gpointer user_data)
 {
     App* app = user_data;
     app->sud.file = "UI_img/7.png";
+    *(app->sud.grid + app->sud.gridy * 9 + app->sud.gridx) = 7;
     draw_fig(app);
 }
 
@@ -636,6 +664,7 @@ void add_8(GtkButton *button, gpointer user_data)
 {
     App* app = user_data;
     app->sud.file = "UI_img/8.png";
+    *(app->sud.grid + app->sud.gridy * 9 + app->sud.gridx) = 8;
     draw_fig(app);
 }
 
@@ -643,20 +672,34 @@ void add_9(GtkButton *button, gpointer user_data)
 {
     App* app = user_data;
     app->sud.file = "UI_img/9.png";
+    *(app->sud.grid + app->sud.gridy * 9 + app->sud.gridx) = 9;
     draw_fig(app);
 }
 
 void add_0(GtkButton *button, gpointer user_data)
 {
     App* app = user_data;
+    draw_square(app, "UI_img/blanc.png");
     update_pos(app);
-    draw_square(app);
 }
 
 void add_to_resolve(GtkButton *button, gpointer user_data)
 {
     App* app = user_data;
-    g_print("%s\n", app->sud.file);
+    if (app->sud.posy < 658)
+        draw_square(app, "UI_img/blanc.png");
+    app->image_surface = app->sud.surface;
+    SDL_SaveBMP(app->sud.surface, "tmp_img/create_sud.bmp");
+    gtk_image_set_from_file(app->image.img, "tmp_img/create_sud.bmp");
+    app->is_generate = 1;
+    gtk_widget_destroy(GTK_WIDGET(app->sud.win));
+    free(app->sud.grid);
+}
+
+void quit(App* app, gpointer w)
+{
+    free(app->sud.grid);
+    gtk_widget_destroy(GTK_WIDGET(w));
 }
 
 void generate_sud(GtkButton* button, gpointer user_data)
@@ -687,6 +730,10 @@ void generate_sud(GtkButton* button, gpointer user_data)
 
 	app->sud.win = w;
 	app->sud.img = img;
+	app->sud.posx = 4;
+	app->sud.posy = 4;
+	app->sud.gridx = 0;
+	app->sud.gridy = 0;
 	app->sud.add = add;
 	app->sud.surface = load_image("UI_img/grid.png");
 	app->sud._1 = _1;
@@ -700,10 +747,12 @@ void generate_sud(GtkButton* button, gpointer user_data)
 	app->sud._9 = _9;
         app->sud._0 = _0;
 
-	draw_square(app);
+	app->sud.grid = calloc(81, sizeof(int));
+
+	draw_square(app, "UI_img/carre.png");
 
         gtk_widget_show_all(GTK_WIDGET(w));
-        g_signal_connect_swapped(G_OBJECT(w), "destroy", G_CALLBACK(close_window), NULL);
+        g_signal_connect_swapped(G_OBJECT(w), "destroy", G_CALLBACK(quit), app);
 	g_signal_connect(G_OBJECT(add), "clicked", G_CALLBACK(add_to_resolve), app);
 	g_signal_connect(G_OBJECT(_1), "clicked", G_CALLBACK(add_1), app);
 	g_signal_connect(G_OBJECT(_2), "clicked", G_CALLBACK(add_2), app);
@@ -759,6 +808,7 @@ int main (int argc, char *argv[])
 	.is_rot = 0,
 	.is_resolve = 0,
 	.is_otsu = 0,
+	.is_generate = 0,
         .image_surface = NULL,
         .dis_img = NULL,
         .image = 
@@ -788,6 +838,9 @@ int main (int argc, char *argv[])
 	    .file = "",
 	    .posx = 4,
 	    .posy = 4,
+	    .grid = NULL,
+	    .gridx = 0,
+	    .gridy = 0,
 	    .surface = NULL,
 	    .img = NULL,
 	    .win = NULL,
