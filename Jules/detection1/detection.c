@@ -296,8 +296,8 @@ void search (double l[], int len, double *eca)
     int t2 = gauss(l2,nb2,eca2,moy2);
 
     //double* eca;
-    double tmp = 0;
-    eca = &tmp;
+    /*double tmp = 0;
+    eca = &tmp;*/
     t1 = ecar(l1,t1,eca);
     t2 = ecar(l2, t2,eca);
     

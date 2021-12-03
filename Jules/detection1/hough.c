@@ -256,6 +256,53 @@ SDL_Surface* kernel (SDL_Surface* image_surface)
     return destination;
 }
 
+SDL_Surface* carre(SDL_Surface* surface);
+void print_grid(int grid[]);
+
+void dis(SDL_Surface *img)
+{
+    SDL_Surface *screen;
+
+    // Set the window to the same size as the image
+    screen = SDL_SetVideoMode(img->w, img->h, 0, SDL_SWSURFACE|SDL_ANYFORMAT);
+    if (screen == NULL)
+    {
+        // error management
+        errx(1, "Couldn't set %dx%d video mode: %s\n",
+                img->w, img->h, SDL_GetError());
+    }
+
+    // Blit onto the screen surface
+    if(SDL_BlitSurface(img, NULL, screen, NULL) < 0)
+        warnx("BlitSurface error: %s\n", SDL_GetError());
+
+    // Update the screen
+    SDL_UpdateRect(screen, 0, 0, img->w, img->h);
+}
+
+void fill_grid (SDL_Surface* s, int grid[], int pos)
+{
+    int bo = 1;
+    int i =0;
+    int w = s->w;
+    int h = (s->h)/2;
+    Uint32 p;
+    Uint8 r,g,b;
+    while (i<w && bo)
+    {
+        p =get_pixel(s,i,h);
+        SDL_GetRGB(p,s->format,&r,&g,&b);
+        bo = r==255 && g == 255 && b==255;
+        i++;
+    }
+    if (bo)
+    {
+        grid[pos] = 0;
+    }
+    else
+        grid[pos] = 1;
+}
+
 
 void recognition(char image[], double *ecar)
 {
@@ -269,7 +316,9 @@ void recognition(char image[], double *ecar)
                 errx(3, "can't load %s: %s", image, IMG_GetError());
 
         // div: average of a width of one box
-        int div = (image_surface->w / *ecar);
+        //int div = (image_surface->w / 9);
+        //*ecar = 0;
+        int div = *ecar;
 
         SDL_Surface *img = NULL;
         SDL_Surface *surface = NULL;
@@ -280,31 +329,42 @@ void recognition(char image[], double *ecar)
         spriteSrc.h = div;
         spriteSrc.x = 0;
         spriteSrc.y = 0;
-
-        int count = 0;
+        
+        int grid[81];
+        //int count = 0;
         for (int i = 0; i < 9; i++)
         {
                 for (int j = 0; j < 9; j++)
                 {
                         surface = SDL_CreateRGBSurface (0, div, div, 32, 0, 0, 0, 0);
                         SDL_BlitSurface(image_surface, &spriteSrc, surface, &spriteCoord);
+                        //otsu(surface);
+                        surface = carre (surface);
+                        fill_grid(surface,grid,i*9+j);
+                        printf("%i\n",surface==NULL);
+                        printf("ligne %i colonne %i\n",i,j);
+                        //dis(surface);
                         SDL_SaveBMP(surface, "image.bmp");
-                        if (count < 9)
+                        //printf("sortie save\n"); 
+                        display("image.bmp");
+                        //printf("sortie display\n");
+
+                        /*if (count < 9)
                         {
                                 display("image.bmp");
                                 count++;
-                        }
+                        }*/
                         spriteSrc.x += div;
                 }
 
                 spriteSrc.x = 0;
                 spriteSrc.y += div;
        }
-
+        print_grid(grid);
         SDL_FreeSurface(img);
         SDL_FreeSurface(image_surface);
         SDL_FreeSurface(surface);
-        SDL_Quit();
+        //SDL_Quit();
 }
 
 
@@ -395,7 +455,10 @@ accum[], double accum_seuil[])
     if (i>=20&&i<100)
     {
      
-        double *ecar = search(lignes, 2*nb);
+        double *ecar = malloc(sizeof(double));
+        *ecar = 0;
+        search(lignes, 2*nb, ecar);
+        printf("ecar = %lf\n",*ecar);
         double l[16];
         int j = 0;
         for (int i = 0; i < 8; i += 2)
@@ -436,7 +499,6 @@ accum[], double accum_seuil[])
         SDL_BlitSurface(dest, &rect, surface, &cord);
         /*Uint32 pixel = SDL_MapRGB(dest->format,0,255,0);
         put_pixel(dest, l[0],l[9],pixel);*/
-        printf("save crash\n");
         if (surface == NULL)
         {
             printf("error surface\n");
@@ -444,6 +506,7 @@ accum[], double accum_seuil[])
         SDL_SaveBMP(surface, "test.bmp");
         printf("apres\n");
         recognition("test.bmp", ecar);
+        free(ecar);
         return dest;
     }
 
@@ -457,6 +520,173 @@ accum[], double accum_seuil[])
 
         
 }
+
+void print_grid(int grid[])
+{
+    for (int i =0; i< 9;i++)
+    {
+        for (int j =0; j< 9; j++)
+        {
+            printf("%i ", grid[i*9+j]);
+        }
+        printf("\n");
+    }
+}
+
+
+
+void boucle_fin (SDL_Surface* surface,int w,int h)
+{
+    printf("dans la boucle\n\n");
+    int endx = w/9;
+    int endy = h/9;
+    int x=0;
+    int y=0;
+    int i;
+    Uint32 p;
+    do
+    {
+        //horizon haut
+        for (i = 0 ; i< w-x;i++)
+        {
+            p = SDL_MapRGB(surface->format,255,255,255);
+            put_pixel(surface,x+i,y,p);
+        }
+        //vertical droit
+        for (i = 0 ; i< h-y;i++)
+        {
+            p = SDL_MapRGB(surface->format,255,255,255);
+            put_pixel(surface,w-x-1,y+i,p);
+        }
+        //horizon bas
+        for (i = 0 ; i< w-x;i++)
+        {
+            p = SDL_MapRGB(surface->format,255,255,255);
+            put_pixel(surface,x+i,h-y-1,p);
+        }
+        //vertica gauche
+        for (i = 0 ; i< h-y;i++)
+        {
+            p = SDL_MapRGB(surface->format,255,255,255);
+            put_pixel(surface,x,y+i,p);
+        }
+        x++;
+        y++;
+        if(x>=endx || y>=endy)
+        {
+            printf(" boucle sous\n");
+            int k = 5;
+            while (k>0)
+            {
+                for (i = 0 ; i< w-x;i++)
+                {
+                    p = SDL_MapRGB(surface->format,255,255,255);
+                    put_pixel(surface,x+i,y,p);
+                }
+
+                for (i = 0 ; i< h-y;i++)
+                {
+                    p = SDL_MapRGB(surface->format,255,255,255);
+                    put_pixel(surface,x,y+i,p);
+                }
+                k-=1;
+                x++;
+                y++;
+
+            }
+            break;
+        }
+    }while(x<endx && y <endy);
+}
+
+
+SDL_Surface* carre (SDL_Surface* surface)
+{
+    //grid[0] = 0;
+    int w =surface->w;
+    int h = surface->h;
+    printf("h = %i w = %i\n",h,w);
+    int x = 0;
+    int y =0;
+    int f,i;
+    Uint8 r,g,b;
+    Uint32 p;
+    //SDL_Surface *s = SDL_CreateRGBSurface (0, w, h, 32, 0, 0, 0, 0);
+    //SDL_BlitSurface(surface, NULL, s, NULL);
+    SDL_SaveBMP(surface,"backup.bmp");
+    do
+    {
+        f = 0;
+        //horizon haut
+        for (i = 0 ; i< w - x;i++)
+        {
+            p = get_pixel(surface,x+i,y);
+            SDL_GetRGB(p,surface->format,&r,&g,&b);
+            if (r != 255 && g!= 255 && b != 255)
+            {
+                f = 1;
+            }
+            p = SDL_MapRGB(surface->format,255,255,255);
+            put_pixel(surface,x+i,y,p);
+        }
+        //vertical droit
+        for (i = 0 ; i< h - y;i++)
+        {
+            p = get_pixel(surface,w-x-1,y+i);
+            SDL_GetRGB(p,surface->format,&r,&g,&b);
+            if (r != 255 && g!= 255 && b != 255)
+            {
+                f = 1;
+            }
+            p = SDL_MapRGB(surface->format,255,255,255);
+            put_pixel(surface,w-x-1,y+i,p);
+        }
+        //horizon bas
+        for (i = 0 ; i< w - x;i++)
+        {
+            p = get_pixel(surface,x+i,h-y-1);
+            SDL_GetRGB(p,surface->format,&r,&g,&b);
+            if (r != 255 && g!= 255 && b != 255)
+            {
+                f = 1;
+            }
+            p = SDL_MapRGB(surface->format,255,255,255);
+            put_pixel(surface,x+i,h-y-1,p);
+        }
+        //vertica gauche
+        for (i = 0 ; i< h - y;i++)
+        {
+            p = get_pixel(surface,x,y+i);
+            SDL_GetRGB(p,surface->format,&r,&g,&b);
+            if (r != 255 && g!= 255 && b != 255)
+            {
+                f = 1;
+            }
+            p = SDL_MapRGB(surface->format,255,255,255);
+            put_pixel(surface,x,y+i,p);
+
+        }
+        if(f == 1)
+        {
+            x++;
+            y++;
+        }
+        if (x >= w/4 || y >= h/4)
+        {
+            f=-1;
+            surface = load_image("backup.bmp");
+            boucle_fin (surface,w,h);
+            return surface;
+        }
+
+    }while(f==1);
+    return surface;
+    /*Uint32 p;
+    p = SDL_MapRGB(surface->format,0,255,0);
+    put_pixel (surface,0,0,p);*/
+
+}
+
 
 int main(int argc,char *argv[])
 {
