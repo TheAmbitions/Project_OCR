@@ -129,11 +129,11 @@ int resolve()
 	int grid[9][9];
 
 	initialisation_array(grid);
-	input_sudoku("sudoku.txt", grid);
+	input_sudoku("../data/sudoku.txt", grid);
 	// Resolve the grid
 	if (BruteSolve(grid, 0, 0) == 1)
 	{
-		output_sudoku(grid, "result_grid.txt");
+		output_sudoku(grid, "../data/result_grid.txt");
 		return 1;
 	}
 	// No solution exists

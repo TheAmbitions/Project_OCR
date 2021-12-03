@@ -12,7 +12,7 @@
       <object class="GtkImage" id="img">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
-        <property name="pixbuf">UI_img/nothing.png</property>
+        <property name="pixbuf">../Image/UI_img/nothing.png</property>
       </object>
     </child>
   </object>

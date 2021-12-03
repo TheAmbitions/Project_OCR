@@ -128,10 +128,10 @@ void openfile(GtkButton *button, gpointer user_data)
         //g_print("Weight = %i\n", app->image_surface->w);
         //g_print("Height = %i\n", app->image_surface->h);
         app->dis_img = resize(app->dis_img);
-        SDL_SaveBMP(app->dis_img, "tmp_img/display.bmp");
+        SDL_SaveBMP(app->dis_img, "../Image/tmp_img/display.bmp");
         //g_print("Weight = %i\n", app->dis_img->w);
         //g_print("Height = %i\n", app->dis_img->h);
-        gtk_image_set_from_file(app->image.img, "tmp_img/display.bmp");
+        gtk_image_set_from_file(app->image.img, "../Image/tmp_img/display.bmp");
         app->is_resolve = 0;
 	app->is_otsu = 0;
 	app->is_rot = 0;
@@ -173,19 +173,19 @@ void on_show(GtkButton *button, gpointer user_data)
     {
         GtkBuilder* builder = gtk_builder_new();
         GError* error = NULL;
-        if (gtk_builder_add_from_file(builder, "show_window.glade", &error) == 0)
+        if (gtk_builder_add_from_file(builder, "../data/show_window.glade", &error) == 0)
         {
             g_printerr("Error loading file: %s\n", error->message);
             g_clear_error(&error);
         }
         else
         {
-	    SDL_SaveBMP(app->image_surface, "tmp_img/vrai_image.bmp");
+	    SDL_SaveBMP(app->image_surface, "../Image/tmp_img/vrai_image.bmp");
 	    GtkWindow* w = GTK_WINDOW(gtk_builder_get_object(builder, "window"));
             GtkImage* img = GTK_IMAGE(gtk_builder_get_object(builder, "img"));
 
             gtk_widget_show_all(GTK_WIDGET(w));
-	    gtk_image_set_from_file(img, "tmp_img/vrai_image.bmp");
+	    gtk_image_set_from_file(img, "../Image/tmp_img/vrai_image.bmp");
             g_signal_connect_swapped(G_OBJECT(w), "destroy", G_CALLBACK(close_window), NULL);
         }
     }
@@ -257,7 +257,7 @@ void display_result()
 {
     GtkBuilder* builder = gtk_builder_new();
     GError* error = NULL;
-    if (gtk_builder_add_from_file(builder, "show_window.glade", &error) == 0)
+    if (gtk_builder_add_from_file(builder, "../data/show_window.glade", &error) == 0)
     {
         g_printerr("Error loading file: %s\n", error->message);
         g_clear_error(&error);
@@ -268,7 +268,7 @@ void display_result()
         GtkImage* img = GTK_IMAGE(gtk_builder_get_object(builder, "img"));
 
         gtk_widget_show_all(GTK_WIDGET(w));
-        gtk_image_set_from_file(img, "tmp_img/result.bmp");
+        gtk_image_set_from_file(img, "../Image/tmp_img/result.bmp");
         g_signal_connect_swapped(G_OBJECT(w), "destroy", G_CALLBACK(close_window), NULL);
     }
 }
@@ -296,6 +296,13 @@ void resolve_generate(App *app)
 	apply_display();
 	display_result();
     }
+}
+
+gboolean handle_progress(GtkProgressBar* bar)
+{
+    gtk_progress_bar_pulse(bar);
+    gtk_progress_bar_set_pulse_step(bar, 3.0);
+    return TRUE;
 }
 
 void on_resolve(GtkButton *button, gpointer user_data)
@@ -339,7 +346,7 @@ void on_resolve(GtkButton *button, gpointer user_data)
     else
     {
 	FILE* file = NULL;
-	file = fopen("is_training.txt", "r");
+	file = fopen("../data/is_training.txt", "r");
 	if (file != NULL)
 	{
 	    char *str = malloc(20 * sizeof(char));
@@ -366,6 +373,27 @@ void on_resolve(GtkButton *button, gpointer user_data)
 	    free(str);
 	}
 
+        GtkBuilder* builder = gtk_builder_new();
+        GError* error = NULL;
+        if (gtk_builder_add_from_file(builder, "../data/progress.glade", &error) == 0)
+        {
+            g_printerr("Error loading file: %s\n", error->message);
+            g_clear_error(&error);
+        }
+        else
+        {
+	    GtkWindow* pro_w = GTK_WINDOW(gtk_builder_get_object(builder, "pro_w"));
+            GtkProgressBar* pro_bar = GTK_PROGRESS_BAR(gtk_builder_get_object(builder, "pro_bar"));
+	    GtkLabel *label = GTK_LABEL(gtk_builder_get_object(builder, "label"));
+	
+	    gtk_label_set_label(label, "Resolving...\n");
+
+            g_timeout_add(1000, (GSourceFunc)handle_progress, pro_bar);
+
+            gtk_widget_show_all(GTK_WIDGET(pro_w));
+            g_signal_connect_swapped(G_OBJECT(pro_w), "destroy", G_CALLBACK(close_window), NULL);
+        }
+
 	if (app->is_generate == 1)
 	    resolve_generate(app);
 	else if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(app->ui.Auto)) == TRUE)
@@ -376,18 +404,12 @@ void on_resolve(GtkButton *button, gpointer user_data)
     }
 }
 
-gboolean handle_progress(GtkProgressBar* bar)
-{
-    gtk_progress_bar_pulse(bar);
-    gtk_progress_bar_set_pulse_step(bar, 1.0);
-    return TRUE;
-}
-
 void on_network(GtkButton *button, gpointer user_data)
 {
+    /*
     GtkBuilder* builder = gtk_builder_new();
     GError* error = NULL;
-    if (gtk_builder_add_from_file(builder, "progress.glade", &error) == 0)
+    if (gtk_builder_add_from_file(builder, "../data/progress.glade", &error) == 0)
     {
         g_printerr("Error loading file: %s\n", error->message);
         g_clear_error(&error);
@@ -399,10 +421,31 @@ void on_network(GtkButton *button, gpointer user_data)
 
         gtk_dialog_run(pro_w);
         g_timeout_add(1000, (GSourceFunc)handle_progress, pro_bar);
+    }*/
+    GtkBuilder* builder = gtk_builder_new();
+    GError* error = NULL;
+    if (gtk_builder_add_from_file(builder, "../data/progress.glade", &error) == 0)
+    {
+        g_printerr("Error loading file: %s\n", error->message);
+        g_clear_error(&error);
+    }
+    else
+    {
+	GtkWindow* pro_w = GTK_WINDOW(gtk_builder_get_object(builder, "pro_w"));
+        GtkProgressBar* pro_bar = GTK_PROGRESS_BAR(gtk_builder_get_object(builder, "pro_bar"));
+	GtkLabel *label = GTK_LABEL(gtk_builder_get_object(builder, "label"));
+	
+	gtk_label_set_label(label, "Network training...\n");
+
+        g_timeout_add(1000, (GSourceFunc)handle_progress, pro_bar);
+
+        gtk_widget_show_all(GTK_WIDGET(pro_w));
+        g_signal_connect_swapped(G_OBJECT(pro_w), "destroy", G_CALLBACK(close_window), NULL);
     }
 
+
     FILE* file = NULL;
-    file = fopen("is_training.txt", "w");
+    file = fopen("../data/is_training.txt", "w");
     if (file != NULL)
     {
         fprintf(file, "1");
@@ -489,11 +532,11 @@ gboolean value_changed(GtkWidget* widget, gpointer user_data)
     app->image_surface = rotozoomSurface(app->image_surface, 
 	gtk_spin_button_get_value_as_int(GTK_SPIN_BUTTON(app->ui.Rotation)),
 	1, 1);
-    SDL_SaveBMP(app->image_surface, "tmp_img/rotation.bmp");
-    app->image.rot_img = load_image("tmp_img/rotation.bmp");
+    SDL_SaveBMP(app->image_surface, "../Image/tmp_img/rotation.bmp");
+    app->image.rot_img = load_image("../Image/tmp_img/rotation.bmp");
     app->image.rot_img = resize(app->image.rot_img);
-    SDL_SaveBMP(app->image.rot_img, "tmp_img/rotation.bmp");
-    gtk_image_set_from_file(app->image.img, "tmp_img/rotation.bmp");
+    SDL_SaveBMP(app->image.rot_img, "../Image/tmp_img/rotation.bmp");
+    gtk_image_set_from_file(app->image.img, "../Image/tmp_img/rotation.bmp");
     app->is_otsu = 0;
     return 0;
 }
@@ -542,15 +585,16 @@ gboolean BlackWhite(GtkWidget* widget, gpointer user_data)
 	gtk_widget_set_sensitive(GTK_WIDGET(app->ui.Grid), TRUE);
 	if (app->is_otsu == 0)
 	{
+	    g_print("ok\n");
 	    app->image_surface = apply_otsu(app->image_surface);
-            app->image.otsu_img = load_image("tmp_img/otsu.bmp");
+            app->image.otsu_img = load_image("../Image/tmp_img/otsu.bmp");
             app->image.otsu_img = resize(app->image.otsu_img);
-            SDL_SaveBMP(app->image.otsu_img, "tmp_img/otsu.bmp");
-            gtk_image_set_from_file(app->image.img, "tmp_img/otsu.bmp");
+            SDL_SaveBMP(app->image.otsu_img, "../Image/tmp_img/otsu.bmp");
+            gtk_image_set_from_file(app->image.img, "../Image/tmp_img/otsu.bmp");
 	    app->is_otsu = 1;
 	}
 	else
-            gtk_image_set_from_file(app->image.img, "tmp_img/otsu.bmp");
+            gtk_image_set_from_file(app->image.img, "../Image/tmp_img/otsu.bmp");
         return 0;
     }
     else if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(app->ui.bw)) == FALSE)
@@ -558,9 +602,9 @@ gboolean BlackWhite(GtkWidget* widget, gpointer user_data)
 	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(app->ui.Grid), FALSE);
 	gtk_widget_set_sensitive(GTK_WIDGET(app->ui.Grid), FALSE);
 	if (app->is_rot == 1)
-	    gtk_image_set_from_file(app->image.img, "tmp_img/rotation.bmp");
+	    gtk_image_set_from_file(app->image.img, "../Image/tmp_img/rotation.bmp");
 	else
-	    gtk_image_set_from_file(app->image.img, "tmp_img/display.bmp");
+	    gtk_image_set_from_file(app->image.img, "../Image/tmp_img/display.bmp");
         return 0;
     }
 
@@ -599,8 +643,8 @@ void draw_square(App* app, char* path)
                         app->sud.posx + j, 
                         app->sud.posy + i, p);
         }
-    SDL_SaveBMP(app->sud.surface, "tmp_img/create_grid.bmp");
-    gtk_image_set_from_file(app->sud.img, "tmp_img/create_grid.bmp");
+    SDL_SaveBMP(app->sud.surface, "../Image/tmp_img/create_grid.bmp");
+    gtk_image_set_from_file(app->sud.img, "../Image/tmp_img/create_grid.bmp");
     SDL_FreeSurface(sur);
 }
 
@@ -622,7 +666,7 @@ void update_pos(App* app)
 	     app->sud.gridy++;
         }
 	if (app->sud.posy < 658)
-	    draw_square(app, "UI_img/carre.png");
+	    draw_square(app, "../Image/UI_img/carre.png");
     }
 }
 
@@ -641,8 +685,8 @@ void draw_fig(App* app)
 			app->sud.posx + j, 
 			app->sud.posy + i, p);
 	}
-    SDL_SaveBMP(app->sud.surface, "tmp_img/create_grid.bmp");
-    gtk_image_set_from_file(app->sud.img, "tmp_img/create_grid.bmp");
+    SDL_SaveBMP(app->sud.surface, "../Image/tmp_img/create_grid.bmp");
+    gtk_image_set_from_file(app->sud.img, "../Image/tmp_img/create_grid.bmp");
     update_pos(app);
     SDL_FreeSurface(sur);
 }
@@ -650,7 +694,7 @@ void draw_fig(App* app)
 void add_1(GtkButton *button, gpointer user_data)
 {
     App* app = user_data;
-    app->sud.file = "UI_img/1.png";
+    app->sud.file = "../Image/UI_img/1.png";
     *(app->sud.grid + app->sud.gridy * 9 + app->sud.gridx) = 1;
     draw_fig(app);
 }
@@ -658,7 +702,7 @@ void add_1(GtkButton *button, gpointer user_data)
 void add_2(GtkButton *button, gpointer user_data)
 {
     App* app = user_data;
-    app->sud.file = "UI_img/2.png";
+    app->sud.file = "../Image/UI_img/2.png";
     *(app->sud.grid + app->sud.gridy * 9 + app->sud.gridx) = 2;
     draw_fig(app);
 }
@@ -666,7 +710,7 @@ void add_2(GtkButton *button, gpointer user_data)
 void add_3(GtkButton *button, gpointer user_data)
 {
     App* app = user_data;
-    app->sud.file = "UI_img/3.png";
+    app->sud.file = "../Image/UI_img/3.png";
     *(app->sud.grid + app->sud.gridy * 9 + app->sud.gridx) = 3;
     draw_fig(app);
 }
@@ -674,7 +718,7 @@ void add_3(GtkButton *button, gpointer user_data)
 void add_4(GtkButton *button, gpointer user_data)
 {
     App* app = user_data;
-    app->sud.file = "UI_img/4.png";
+    app->sud.file = "../Image/UI_img/4.png";
     *(app->sud.grid + app->sud.gridy * 9 + app->sud.gridx) = 4;
     draw_fig(app);
 }
@@ -682,7 +726,7 @@ void add_4(GtkButton *button, gpointer user_data)
 void add_5(GtkButton *button, gpointer user_data)
 {
     App* app = user_data;
-    app->sud.file = "UI_img/5.png";
+    app->sud.file = "../Image/UI_img/5.png";
     *(app->sud.grid + app->sud.gridy * 9 + app->sud.gridx) = 5;
     draw_fig(app);
 }
@@ -690,7 +734,7 @@ void add_5(GtkButton *button, gpointer user_data)
 void add_6(GtkButton *button, gpointer user_data)
 {
     App* app = user_data;
-    app->sud.file = "UI_img/6.png";
+    app->sud.file = "../Image/UI_img/6.png";
     *(app->sud.grid + app->sud.gridy * 9 + app->sud.gridx) = 6;
     draw_fig(app);
 }
@@ -698,7 +742,7 @@ void add_6(GtkButton *button, gpointer user_data)
 void add_7(GtkButton *button, gpointer user_data)
 {
     App* app = user_data;
-    app->sud.file = "UI_img/7.png";
+    app->sud.file = "../Image/UI_img/7.png";
     *(app->sud.grid + app->sud.gridy * 9 + app->sud.gridx) = 7;
     draw_fig(app);
 }
@@ -706,7 +750,7 @@ void add_7(GtkButton *button, gpointer user_data)
 void add_8(GtkButton *button, gpointer user_data)
 {
     App* app = user_data;
-    app->sud.file = "UI_img/8.png";
+    app->sud.file = "../Image/UI_img/8.png";
     *(app->sud.grid + app->sud.gridy * 9 + app->sud.gridx) = 8;
     draw_fig(app);
 }
@@ -714,7 +758,7 @@ void add_8(GtkButton *button, gpointer user_data)
 void add_9(GtkButton *button, gpointer user_data)
 {
     App* app = user_data;
-    app->sud.file = "UI_img/9.png";
+    app->sud.file = "../Image/UI_img/9.png";
     *(app->sud.grid + app->sud.gridy * 9 + app->sud.gridx) = 9;
     draw_fig(app);
 }
@@ -722,7 +766,7 @@ void add_9(GtkButton *button, gpointer user_data)
 void add_0(GtkButton *button, gpointer user_data)
 {
     App* app = user_data;
-    draw_square(app, "UI_img/blanc.png");
+    draw_square(app, "../Image/UI_img/blanc.png");
     //*(app->sud.grid + app->sud.gridy * 9 + app->sud.gridx) = 0;
     update_pos(app);
 }
@@ -736,14 +780,14 @@ void add_to_resolve(GtkButton *button, gpointer user_data)
 {
     App* app = user_data;
     if (app->sud.posy < 658)
-        draw_square(app, "UI_img/blanc.png");
+        draw_square(app, "../Image/UI_img/blanc.png");
     app->image_surface = app->sud.surface;
-    SDL_SaveBMP(app->sud.surface, "tmp_img/create_sud.bmp");
-    gtk_image_set_from_file(app->image.img, "tmp_img/create_sud.bmp");
+    SDL_SaveBMP(app->sud.surface, "../Image/tmp_img/create_sud.bmp");
+    gtk_image_set_from_file(app->image.img, "../Image/tmp_img/create_sud.bmp");
     app->is_generate = 1;
 
     FILE* file = NULL;
-    file = fopen("sudoku.txt", "w");
+    file = fopen("../data/sudoku.txt", "w");
 
     if (file != NULL)
     {
@@ -771,7 +815,7 @@ void generate_sud(GtkButton* button, gpointer user_data)
     App* app = user_data;
     GtkBuilder* builder = gtk_builder_new();
     GError* error = NULL;
-    if (gtk_builder_add_from_file(builder, "create_sudoku.glade", &error) == 0)
+    if (gtk_builder_add_from_file(builder, "../data/create_sudoku.glade", &error) == 0)
     {
         g_printerr("Error loading file: %s\n", error->message);
         g_clear_error(&error);
@@ -799,7 +843,7 @@ void generate_sud(GtkButton* button, gpointer user_data)
 	app->sud.gridx = 0;
 	app->sud.gridy = 0;
 	app->sud.add = add;
-	app->sud.surface = load_image("UI_img/grid.png");
+	app->sud.surface = load_image("../Image/UI_img/grid.png");
 	app->sud._1 = _1;
 	app->sud._2 = _2;
 	app->sud._3 = _3;
@@ -815,7 +859,7 @@ void generate_sud(GtkButton* button, gpointer user_data)
 	    for (int j = 0; j < 9; j++)
 		 app->sud.grid[i * 9 + j] = 0;
 
-	draw_square(app, "UI_img/carre.png");
+	draw_square(app, "../Image/UI_img/carre.png");
 
         gtk_widget_show_all(GTK_WIDGET(w));
         g_signal_connect_swapped(G_OBJECT(w), "destroy", G_CALLBACK(quit), app);
@@ -852,7 +896,7 @@ int main (int argc, char *argv[])
     // (Exits if an error occurs.)
     GtkBuilder* builder = gtk_builder_new();
     GError* error = NULL;
-    if (gtk_builder_add_from_file(builder, "main_window.glade", &error) == 0)
+    if (gtk_builder_add_from_file(builder, "../data/main_window.glade", &error) == 0)
     {
         g_printerr("Error loading file: %s\n", error->message);
         g_clear_error(&error);

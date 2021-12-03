@@ -820,6 +820,7 @@ SDL_Surface* apply_otsu(SDL_Surface* image_surface)
 	
 	//otsu(image_surface,seuil);
     //ots(image_surface);
+    //printf("OK2\n");
     ot(image_surface);
 	
     //image_surface = Filter(image_surface);
@@ -828,7 +829,7 @@ SDL_Surface* apply_otsu(SDL_Surface* image_surface)
 	//update_surface(screen_surface, image_surface);
 	//wait_for_keypressed();
 	
-    SDL_SaveBMP(image_surface,"tmp_img/otsu.bmp");	
+    SDL_SaveBMP(image_surface,"../Image/tmp_img/otsu.bmp");	
 	
 	//Free the image surface.
 	//SDL_FreeSurface(image_surface);

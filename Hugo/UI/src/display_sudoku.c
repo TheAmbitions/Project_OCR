@@ -283,23 +283,22 @@ void apply_display()
     init_array(grid);
     init_array(grid_res);
 
-    init_sudoku("sudoku.txt", grid);
-    init_sudoku("result_grid.txt", grid_res);
+    init_sudoku("../data/sudoku.txt", grid);
+    init_sudoku("../data/result_grid.txt", grid_res);
     genboard(grid, grid_res);
 
     SDL_Surface* image_surface;
     SDL_Surface* image_surface2;
     SDL_Surface* screen_surface = SDL_CreateRGBSurface(0, 900, 900, 32, 0, 0, 0, 0);
 
-    printf("ok\n");
-    image_surface = load_image("UI_img/Number2.png");
-    image_surface2 = load_image("UI_img/Number3.png");
+    image_surface = load_image("../Image/UI_img/Number2.png");
+    image_surface2 = load_image("../Image/UI_img/Number3.png");
 
     display(screen_surface, image_surface, image_surface2);
     //display_image(screen_surface);
     //wait_for_keypressed();
 
-    SDL_SaveBMP(screen_surface,"tmp_img/result.bmp");
+    SDL_SaveBMP(screen_surface,"../Image/tmp_img/result.bmp");
 
     //Free the image surface.
     SDL_FreeSurface(image_surface);
