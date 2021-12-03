@@ -333,21 +333,37 @@ int main()
 	for (int i = 0; i < 18; i++)
 		init_tests(train_arr[i], expected[i], i % 9 + 1, img[i]);
 
+	printf("\n\n");
+	printf("Before training:\n\n");
+	test_img(&network, "test_images/1.png", 1);
+	test_img(&network, "test_images/2.png", 2);
+	test_img(&network, "test_images/3.png", 3);
+	test_img(&network, "test_images/4.png", 4);
+	test_img(&network, "test_images/5.png", 5);
+	test_img(&network, "test_images/6.png", 6);
+	test_img(&network, "test_images/7.png", 7);
+	test_img(&network, "test_images/8.png", 8);
+	test_img(&network, "test_images/9.png", 9);
+
 	size_t i;
 	size_t n = 100000;
 	for (i = 0; i < n; i++)
 		training(&network, train_arr[i % 18], expected[i % 18], 1);
 	
-	for (i = 0; i < 18; i++)
+	/*for (i = 0; i < 18; i++)
 		training(&network, train_arr[i], expected[i], 0);
+        */
 
-	test_img(&network, "img/1.png", 1);
-	test_img(&network, "img/2.png", 2);
-	test_img(&network, "img/3.png", 3);
-	test_img(&network, "img/4.png", 4);
-	test_img(&network, "img/5.png", 5);
-	test_img(&network, "img/6.png", 6);
-	test_img(&network, "img/7.png", 7);
-	test_img(&network, "img/8.png", 8);
-	test_img(&network, "img/9.png", 9);
+	printf("\n\n\n");
+	printf("After training :\n\n");
+	test_img(&network, "test_images/1.png", 1);
+	test_img(&network, "test_images/2.png", 2);
+	test_img(&network, "test_images/3.png", 3);
+	test_img(&network, "test_images/4.png", 4);
+	test_img(&network, "test_images/5.png", 5);
+	test_img(&network, "test_images/6.png", 6);
+	test_img(&network, "test_images/7.png", 7);
+	test_img(&network, "test_images/8.png", 8);
+	test_img(&network, "test_images/9.png", 9);
+	printf("\n\n");
 }
