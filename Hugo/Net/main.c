@@ -6,13 +6,10 @@
 
 #include "display.h"
 #include "pixel_operations.h"
-#include "sigmoid.h"
 #include "matrix.h"
+#include "network.h"
 
-#define SIZE 784
-#define LINE 28
-#define HID 30
-#define OUT 9
+#include <dirent.h>
 
 void print_arr(double arr[], size_t line, size_t cols)
 {
@@ -24,21 +21,17 @@ void print_arr(double arr[], size_t line, size_t cols)
 	}
 }
 
-typedef struct Network
-{
-	size_t inputsize;
-	size_t hiddensize;
-	size_t outputsize;
-	double input[SIZE];
-	double values[HID];
-	double output[OUT];
-	double b1[HID];
-	double b2[OUT];
-	double w1[SIZE][HID];
-	double w2[HID][OUT];
-}Network;
-
 /*------------------------------------------------------------------------------ Feedforward --------------------------------------------------------------------------------*/
+
+double sigmoid(double x)
+{
+        return 1.0 / (1.0 + exp(-x));
+}
+
+double sigmoid_prime(double x)
+{
+        return sigmoid(x) * (1.0 - sigmoid(x));
+}
 
 void softmax(double input[], size_t size)
 {
@@ -118,9 +111,6 @@ void backprop(Network *net, double y[], float eta)
 		net->output[i] = (y[i] - net->output[i]) * sigmoid_prime(net->output[i]) * eta;
 	}
 
-	//update w2 of the network
-	adjust_weights(net->hiddensize, net->outputsize, net->values, net->output, net->w2);
-
 	//update errors of the hidden layer
 	double w2_t[net->outputsize][net->hiddensize];
 	transpose(net->hiddensize, net->outputsize, net->w2, w2_t);
@@ -133,6 +123,8 @@ void backprop(Network *net, double y[], float eta)
 
 	//update w1 of the network
 	adjust_weights(net->inputsize, net->hiddensize, net->input, z2_delta, net->w1);
+	//update w2 of the network
+        adjust_weights(net->hiddensize, net->outputsize, net->values, net->output, net->w2);
 }
 
 /*------------------------------------------------------------------------------ Init network --------------------------------------------------------------------------------*/
@@ -170,12 +162,21 @@ void generateWeights(size_t n, size_t p, double w[n][p])
 		}
 }
 
-void init_network(Network* net)
+void load(Network* net, char path[]);
+
+void init_network(Network* net, int is_loaded)
 {
-	generateBiases(HID, net->b1);
-	generateBiases(1, net->b2);
-	generateWeights(SIZE, HID, net->w1);
-	generateWeights(HID, OUT, net->w2);
+	if (is_loaded == 0)
+	{
+	    generateBiases(HID, net->b1);
+ 	    generateBiases(1, net->b2);
+	    generateWeights(SIZE, HID, net->w1);
+	    generateWeights(HID, OUT, net->w2);
+	}
+	else 
+	{
+	    load(net, "../data/save.txt");
+	}
 }
 
 void init_tests(double arr[], double expected[], int number, char *path)
@@ -240,7 +241,7 @@ size_t eval(double o[])
 		}
 	}
 
-	return max_i + 1;
+	return max_i;
 }
 
 void print_train(Network* net, double e[])
@@ -292,6 +293,219 @@ void test_img(Network* net, char *path, int expected)
 	printf("Expected : %i | return value : %li\n", expected, eval(net->output));
 }
 
+void training_mnist(Network* net, double y[], char *path)
+{
+    DIR* rep = NULL;
+    rep = opendir(path);
+    if (rep == NULL)
+	    return;
+
+    struct dirent* fileread = NULL;
+    char dest[100] = "";
+    char copy[100] = "";
+    strcat(dest, path);
+    strcat(copy, path);
+    
+    fileread = readdir(rep);
+    fileread = readdir(rep);
+    fileread = readdir(rep);
+    while (fileread != NULL)
+    {
+	strcpy(dest, copy);
+	strcat(dest, fileread->d_name);
+	SDL_Surface* image_surface = load_image(dest);
+
+        int width = image_surface->w;
+        int height = image_surface->h;
+        Uint32 p;
+        Uint8 r, g, b;
+        int i, j;
+        for (i = 0; i < height; i++)
+        {
+                for (j = 0; j < width; j++)
+                {
+                        p = get_pixel(image_surface, j, i);
+                        SDL_GetRGB(p, image_surface->format, &r, &g, &b);
+                        if ((r + g + b) / 3 <= 127)
+                                net->input[i * height + j] = 0;
+                        else
+                                net->input[i * height + j] = 1;
+                }
+        }
+	feedforward(net);
+	backprop(net, y, 0.01);
+	fileread = readdir(rep);
+    }
+    
+    if (closedir(rep) == -1)
+	    return;
+}
+
+void testing_mnist(Network* net, size_t y, size_t *nbtest, size_t *suc, char *path)
+{
+    DIR* rep = NULL;
+    rep = opendir(path);
+    if (rep == NULL)
+            return;
+
+    struct dirent* fileread = NULL;
+    char dest[100] = "";
+    strcat(dest, path);
+    char copy[100] = "";
+    strcat(copy, path);
+
+    fileread = readdir(rep);
+    fileread = readdir(rep);
+    fileread = readdir(rep);
+    while (fileread != NULL)
+    {
+	*nbtest += 1;
+	strcpy(dest, copy);
+	strcat(dest, fileread->d_name);
+        SDL_Surface* image_surface = load_image(dest);
+
+        int width = image_surface->w;
+        int height = image_surface->h;
+        Uint32 p;
+        Uint8 r, g, b;
+        int i, j;
+        for (i = 0; i < height; i++)
+        {
+                for (j = 0; j < width; j++)
+                {
+                        p = get_pixel(image_surface, j, i);
+                        SDL_GetRGB(p, image_surface->format, &r, &g, &b);
+                        if ((r + g + b) / 3 <= 127)
+                                net->input[i * height + j] = 0;
+                        else
+                                net->input[i * height + j] = 1;
+                }
+        }
+        feedforward(net);
+        if (eval(net->output) == y)
+		*suc += 1;
+        fileread = readdir(rep);
+    }
+
+    if (closedir(rep) == -1)
+            return;
+}
+
+void save(Network* net, char path[])
+{
+        FILE* file = NULL;
+
+        file = fopen(path, "w");
+
+        if (file != NULL)
+        {
+                size_t i, j;
+                for (i = 0; i < LINE; i++)
+                {
+                        for (j = 0; j < HID; j++)
+                        {
+                                fprintf(file, "%f\n", net->w1[i][j]);
+                        }
+                }
+
+                for (i = 0; i < HID; i++)
+                {
+                        for (j = 0; j < OUT; j++)
+                        {
+                                fprintf(file, "%f\n", net->w2[i][j]);
+                        }
+                }
+
+                for (i = 0; i < HID; i++)
+                        fprintf(file, "%f\n", net->b1[i]);
+
+                for (i = 0; i < OUT; i++)
+                        fprintf(file, "%f\n", net->b2[i]);
+
+                fclose(file);
+        }
+        else
+                errx(1, "Error : cannot create the file");
+}
+
+void load(Network* net, char path[])
+{
+        FILE* file = NULL;
+
+        file = fopen(path, "r");
+
+        if (file != NULL)
+        {
+                const int MAX_SIZE = 20;
+                //char str[MAX_SIZE];
+                char* str = (char*)malloc(MAX_SIZE);
+                size_t i, j;
+                for (i = 0; i < LINE; i++)
+                {
+                        for (j = 0; j < HID; j++)
+                        {
+                                str = fgets(str, MAX_SIZE, file);
+                                net->w1[i][j] = atof(str);
+                        }
+                }
+
+                for (i = 0; i < HID; i++)
+                {
+                        for (j = 0; j < OUT; j++)
+                        {
+                                str = fgets(str, MAX_SIZE, file);
+                                net->w2[i][j] = atof(str);
+                        }
+                }
+
+                for (i = 0; i < HID; i++)
+                {
+                        str = fgets(str, MAX_SIZE, file);
+                        net->b1[i] = atof(str);
+                }
+
+                for (i = 0; i < OUT; i++)
+                {
+                        str = fgets(str, MAX_SIZE, file);
+                        net->b2[i] = atof(str);
+                }
+
+                free(str);
+                fclose(file);
+        }
+        else
+		errx(1, "Error : the path does not exist");
+}
+
+int apply_network(Network *net, SDL_Surface *image_surface)
+{
+	int width = image_surface->w;
+        int height = image_surface->h;
+        Uint32 p;
+        Uint8 r, g, b;
+        int i, j;
+        for (i = 0; i < height; i++)
+        {
+                for (j = 0; j < width; j++)
+                {
+                        p = get_pixel(image_surface, j, i);
+                        SDL_GetRGB(p, image_surface->format, &r, &g, &b);
+                        if ((r + g + b) / 3 <= 127)
+                                net->input[i * height + j] = 1;
+                        else
+                                net->input[i * height + j] = 0;
+                }
+        }
+        feedforward(net);
+	return (int)eval(net->output);
+}
+
+void apply_training(Network* net, char* path)
+{
+	
+}
+
+/*
 int main()
 {
 	double train_arr[18][SIZE];
@@ -350,9 +564,8 @@ int main()
 	for (i = 0; i < n; i++)
 		training(&network, train_arr[i % 18], expected[i % 18], 1);
 	
-	/*for (i = 0; i < 18; i++)
+	for (i = 0; i < 18; i++)
 		training(&network, train_arr[i], expected[i], 0);
-        */
 
 	printf("\n\n\n");
 	printf("After training :\n\n");
@@ -365,5 +578,115 @@ int main()
 	test_img(&network, "test_images/7.png", 7);
 	test_img(&network, "test_images/8.png", 8);
 	test_img(&network, "test_images/9.png", 9);
-	printf("\n\n");
-}
+	printf("\n\n");*/
+	
+	/*double grid[784];
+	SDL_Surface* image_surface = load_image("../../../mnist_png/training/1/3.png");
+
+        int width = image_surface->w;
+        int height = image_surface->h;
+        Uint32 p;
+        Uint8 r, g, b;
+        int i, j;
+        for (i = 0; i < height; i++)
+        {
+                for (j = 0; j < width; j++)
+                {
+                        p = get_pixel(image_surface, j, i);
+                        SDL_GetRGB(p, image_surface->format, &r, &g, &b);
+                        if ((r + g + b) / 3 <= 127)
+                                grid[i * height + j] = 0;
+                        else
+                                grid[i * height + j] = 1;
+                }
+        }
+
+	print_arr(grid, 28, 28);
+
+	Network net =
+        {
+                .inputsize = SIZE,
+                .hiddensize = HID,
+                .outputsize = OUT,
+                .input = {},
+                .values = {},
+                .output = {},
+                .b1 = {},
+                .b2 = {},
+                .w1 = {},
+                .w2 = {},
+        };
+
+        init_network(&net, 0);
+
+	size_t nbtest = 0;
+	size_t suc = 0;
+	double y[] = {1, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+
+	//training_mnist(&net, y, "../../../mnist_png/training/1/");
+	training_mnist(&net, y, "../../../mnist_png/training/0/");
+	y[0] = 0;
+	y[1] = 1;
+	printf("Folder 0 pass\n");
+	training_mnist(&net, y, "../../../mnist_png/training/1/");
+	y[1] = 0;
+        y[2] = 1;
+	printf("Folder 1 pass\n");
+	training_mnist(&net, y, "../../../mnist_png/training/2/");
+	y[2] = 0;
+        y[3] = 1;
+	printf("Folder 2 pass\n");
+	training_mnist(&net, y, "../../../mnist_png/training/3/");
+	y[3] = 0;
+        y[4] = 1;
+	printf("Folder 3 pass\n");
+	training_mnist(&net, y, "../../../mnist_png/training/4/");
+	y[4] = 0;
+        y[5] = 1;
+	printf("Folder 4 pass\n");
+	training_mnist(&net, y, "../../../mnist_png/training/5/");
+	y[5] = 0;
+        y[6] = 1;
+	printf("Folder 5 pass\n");
+	training_mnist(&net, y, "../../../mnist_png/training/6/");
+	y[6] = 0;
+        y[7] = 1;
+	printf("Folder 6 pass\n");
+	training_mnist(&net, y, "../../../mnist_png/training/7/");
+	y[7] = 0;
+        y[8] = 1;
+	printf("Folder 7 pass\n");
+	training_mnist(&net, y, "../../../mnist_png/training/8/");
+	y[8] = 0;
+        y[9] = 1;
+	printf("Folder 8 pass\n");
+	training_mnist(&net, y, "../../../mnist_png/training/9/");
+	printf("Folder 9 pass\n");
+
+	save(&net, "save.txt");
+
+	testing_mnist(&net, 0, &nbtest, &suc, "../../../mnist_png/testing/0/");
+	printf("Test 0 pass.\n");
+	testing_mnist(&net, 1, &nbtest, &suc, "../../../mnist_png/testing/1/");
+	printf("Test 1 pass.\n");
+	testing_mnist(&net, 2, &nbtest, &suc, "../../../mnist_png/testing/2/");
+	printf("Test 2 pass.\n");
+	testing_mnist(&net, 3, &nbtest, &suc, "../../../mnist_png/testing/3/");
+	printf("Test 3 pass.\n");
+	testing_mnist(&net, 4, &nbtest, &suc, "../../../mnist_png/testing/4/");
+	printf("Test 4 pass.\n");
+	testing_mnist(&net, 5, &nbtest, &suc, "../../../mnist_png/testing/5/");
+	printf("Test 5 pass.\n");
+	testing_mnist(&net, 6, &nbtest, &suc, "../../../mnist_png/testing/6/");
+	printf("Test 6 pass.\n");
+	testing_mnist(&net, 7, &nbtest, &suc, "../../../mnist_png/testing/7/");
+	printf("Test 7 pass.\n");
+	testing_mnist(&net, 8, &nbtest, &suc, "../../../mnist_png/testing/8/");
+	printf("Test 8 pass.\n");
+	testing_mnist(&net, 9, &nbtest, &suc, "../../../mnist_png/testing/9/");
+	printf("Test 9 pass.\n");
+
+	printf("Pourcentage de réussite : %f\n",((double)suc / nbtest) * 100);
+
+	return 0;
+}*/

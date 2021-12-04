@@ -2,8 +2,8 @@
 
 CC = gcc
 
-CPPFLAGS= `pkg-config --cflags sdl` -MMD -g -fsanitize=address
-CFLAGS = `pkg-config --cflags gtk+-3.0` -Wall -Wextra -O3
+CPPFLAGS= `pkg-config --cflags sdl` -MMD -g
+CFLAGS = `pkg-config --cflags gtk+-3.0` -Wall -Wextra -Werror -std=c99 -O3
 LDLIBS = `pkg-config --libs gtk+-3.0` `pkg-config --libs sdl` -lSDL_image -lSDL_gfx -lm
 
 EXE = main

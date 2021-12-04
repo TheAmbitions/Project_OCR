@@ -9,7 +9,7 @@ LDLIBS= `pkg-config --libs sdl` -lSDL_image -lm
 
 all: main
 
-main: main.o pixel_operations.o display.o sigmoid.o matrix.o
+main: main.o pixel_operations.o display.o matrix.o
 
 clean:
 	${RM} *.o

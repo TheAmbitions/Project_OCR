@@ -474,6 +474,7 @@ gboolean Automatic(GtkWidget* widget, gpointer user_data)
         gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(app->ui.Manual), FALSE);
 
         gtk_widget_set_sensitive(GTK_WIDGET(app->ui.Rotation), FALSE);
+	gtk_widget_set_sensitive(GTK_WIDGET(app->ui.Enter), FALSE);
         gtk_widget_set_sensitive(GTK_WIDGET(app->ui.IA), FALSE);
         gtk_widget_set_sensitive(GTK_WIDGET(app->ui.bw), FALSE);
         gtk_widget_set_sensitive(GTK_WIDGET(app->ui.Grid), FALSE);
@@ -502,6 +503,7 @@ gboolean Manu(GtkWidget* widget, gpointer user_data)
         gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(app->ui.Auto), FALSE);
 
         gtk_widget_set_sensitive(GTK_WIDGET(app->ui.Rotation), TRUE);
+	gtk_widget_set_sensitive(GTK_WIDGET(app->ui.Enter), TRUE);
         gtk_widget_set_sensitive(GTK_WIDGET(app->ui.bw), TRUE);
         //gtk_widget_set_sensitive(GTK_WIDGET(app->ui.bw), TRUE);
         //gtk_widget_set_sensitive(GTK_WIDGET(app->ui.Grid), TRUE);
@@ -524,7 +526,7 @@ gboolean value_changed(GtkWidget* widget, gpointer user_data)
             flags,
             GTK_MESSAGE_ERROR,
             GTK_BUTTONS_CLOSE,
-            "Error!\n\nNo image.\n\nPlease, load an image before resolve.");
+            "Error!\n\nNo image.\n\nPlease, load an image before rotate.");
 
         gtk_dialog_run(GTK_DIALOG(dialog));
         g_signal_connect_swapped(dialog, "response",
@@ -535,11 +537,11 @@ gboolean value_changed(GtkWidget* widget, gpointer user_data)
     }
 
     int res=0;
-    int acc=100;
+    int acc=1;
     const gchar* s= gtk_entry_get_text(app->ui.Rotation);
     size_t len = strlen(s);
     size_t i=0;
-    if (len==4)
+    if (len==3)
     {
          i = 1;
     }
@@ -547,12 +549,12 @@ gboolean value_changed(GtkWidget* widget, gpointer user_data)
     {
          i=0;
     }
-    for (;i<len;i++)
+    for (;len>i;len--)
     {
-        if (s[i] >='0' && s[i] <= '9')
+        if (s[len - 1] >='0' && s[len - 1] <= '9')
         {
-            res += acc*(s[i] - '0');
-            acc /=10;
+            res += acc*(s[len - 1] - '0');
+            acc *=10;
         }
         else
         {
@@ -1079,6 +1081,7 @@ int main ()
     gtk_widget_set_sensitive(GTK_WIDGET(IA), FALSE);
     gtk_widget_set_sensitive(GTK_WIDGET(bw), FALSE);
     gtk_widget_set_sensitive(GTK_WIDGET(Grid), FALSE);
+    gtk_widget_set_sensitive(GTK_WIDGET(Enter), FALSE);
 
     // Connects signal handlers.
     g_signal_connect(window, "destroy", G_CALLBACK(gtk_main_quit), NULL);
@@ -1104,7 +1107,6 @@ int main ()
     SDL_FreeSurface(app.image.otsu_img);
     SDL_FreeSurface(app.image.rot_img);
 
-    // Exits.
     return 0;
 }
 
