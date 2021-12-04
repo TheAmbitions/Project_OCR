@@ -64,6 +64,8 @@ typedef struct Image
     GtkImage *img;
     SDL_Surface *rot_img;
     SDL_Surface *otsu_img;
+    SDL_Surface *hough;
+    SDL_Surface *cases;
 }Image;
 
 typedef struct Application
@@ -1042,6 +1044,8 @@ int main ()
 	    .img = img,
 	    .rot_img = NULL,
 	    .otsu_img = NULL,
+	    .hough = NULL,
+	    .cases = NULL,
 	},
         .ui =
         {
