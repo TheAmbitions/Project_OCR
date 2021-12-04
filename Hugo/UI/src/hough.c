@@ -8,15 +8,15 @@
 #include "pixel_operations.h"
 #include "detection.h"
 #include "otsu.h"
-#include "rotation.h"
+#include "rotations.h"
 #include "display.h"
 #include "SDL/SDL_rotozoom.h"
 
-SDL_Surface* drawLine(SDL_Surface* surf,int x1,int y1, int x2,int y2)  // Bresenham
-{
+//SDL_Surface* drawLine(SDL_Surface* surf,int x1,int y1, int x2,int y2)  // Bresenham
+//{
         /*float x = (float)x1;
     float end = (float)(x2)+0.001;8*/
-	long w = surf -> w;
+	/*long w = surf -> w;
         long h = surf -> h;
         Uint32 pixel = SDL_MapRGB(surf->format, 255, 0, 0);
 
@@ -66,10 +66,10 @@ SDL_Surface* drawLine(SDL_Surface* surf,int x1,int y1, int x2,int y2)  // Bresen
         }
         return  surf;
 
-}
+}*/
 
 
-SDL_Surface* Filter(SDL_Surface* source)
+/*SDL_Surface* Filter(SDL_Surface* source)
 {
 	SDL_Surface *target;
 	int x, y;
@@ -190,7 +190,7 @@ SDL_Surface* Filter(SDL_Surface* source)
 		}
 	}
 	return target;
-}
+}*/
 
 SDL_Surface* kernel (SDL_Surface* image_surface)
 {
@@ -258,30 +258,8 @@ SDL_Surface* kernel (SDL_Surface* image_surface)
 }
 
 SDL_Surface* carre(SDL_Surface* surface);
-void print_grid(int grid[]);
-
-void dis(SDL_Surface *img)
-{
-    SDL_Surface *screen;
-
-    // Set the window to the same size as the image
-    screen = SDL_SetVideoMode(img->w, img->h, 0, SDL_SWSURFACE|SDL_ANYFORMAT);
-    if (screen == NULL)
-    {
-        // error management
-        errx(1, "Couldn't set %dx%d video mode: %s\n",
-                img->w, img->h, SDL_GetError());
-    }
-
-    // Blit onto the screen surface
-    if(SDL_BlitSurface(img, NULL, screen, NULL) < 0)
-        warnx("BlitSurface error: %s\n", SDL_GetError());
-
-    // Update the screen
-    SDL_UpdateRect(screen, 0, 0, img->w, img->h);
-}
-
-SDL_Surface* resize(SDL_Surface* img,int w,int h,int nw,int nh);
+void print_grid2(int grid[]);
+SDL_Surface* resize2(SDL_Surface* img,int w,int h,int nw,int nh);
 
 SDL_Surface* fill_grid (SDL_Surface* s, int grid[], int pos, Network* net)
 {
@@ -298,7 +276,7 @@ SDL_Surface* fill_grid (SDL_Surface* s, int grid[], int pos, Network* net)
         bo = r==255 && g == 255 && b==255;
         i++;
     } 
-    s = resize (s,s->w,s->h,28,28);
+    s = resize2 (s,s->w,s->h,28,28);
     if (bo)
     {
         grid[pos] = 0;
@@ -344,7 +322,7 @@ void draw_detection(SDL_Surface* s,SDL_Surface* dest,int x, int y)
 
 }
 
-SDL_Surface* resize (SDL_Surface *img, int w, int h, int nw,int nh)
+SDL_Surface* resize2 (SDL_Surface *img, int w, int h, int nw,int nh)
 {
     double zoomx = (double)nw/ (double)w;
     double zoomy = (double)nh/ (double)h;
@@ -437,8 +415,8 @@ void recognition(char image[], double *ecar, Network* net)
                 spriteSrc.y += div;
        }
         SDL_SaveBMP(dest,"grille.bmp");
-        display("grille.bmp");
-        print_grid(grid);
+        //display("grille.bmp");
+        print_grid2(grid);
         save_sudoku(grid,"grid.txt");
         SDL_FreeSurface(dest);
         SDL_FreeSurface(img);
@@ -598,7 +576,7 @@ accum[], double accum_seuil[], Network* net)
         
 }
 
-void print_grid(int grid[])
+void print_grid2(int grid[])
 {
     for (int i =0; i< 9;i++)
     {
@@ -765,11 +743,11 @@ SDL_Surface* carre (SDL_Surface* surface)
 }
 
 
-void  apply_hough(Network* net, char* filename)
+void  apply_hough(Network* net, char* filename, int is_auto)
 {
 	
 	SDL_Surface* image_surface;
-	SDL_Surface* screen_surface;
+	//SDL_Surface* screen_surface;
 
 	// Initialize the SDL
 	init_sdl();
@@ -803,25 +781,27 @@ void  apply_hough(Network* net, char* filename)
  	
 	//image_traite = Filter(image_surface);
 	//otsu(image_surface);
-    
-    otsu(image_surface);
-	screen_surface =  display_image(image_surface);
-	wait_for_keypressed();
-	//image_surface = sobel(image_surface);
-	int angle= RotationAuto(image_surface,0,0);
-	printf("angle = %i\n",angle);
-        if (angle>35)
-        {
-            image_surface=SDL_RotationCentralN(image_surface,angle-1);
-        }
-        if (angle<0)
+    	if (is_auto)
     	{
-            image_surface=SDL_RotationCentralN(image_surface,angle+1);
-    	}	
+    		ot(image_surface);
+		//screen_surface =  display_image(image_surface);
+		//wait_for_keypressed();
+		//image_surface = sobel(image_surface);
+		int angle= RotationAuto(image_surface,0,0);
+		printf("angle = %i\n",angle);
+		if (angle>35)
+		{  
+			image_surface=SDL_RotationCentralN(image_surface,angle-1);
+		}
+		if (angle<0)
+	    	{
+		    	image_surface=SDL_RotationCentralN(image_surface,angle+1);
+	    	}
+	 }	
         noiseReduction(image_surface);
-		update_surface(screen_surface, image_surface);
-	screen_surface =  display_image(image_surface);
-	wait_for_keypressed();
+		//update_surface(screen_surface, image_surface);
+	//screen_surface =  display_image(image_surface);
+	//wait_for_keypressed();
 	SDL_SaveBMP(image_surface, "hihi.bmp");
     SDL_Surface* image_traite = load_image("hihi.bmp");
     image_traite = kernel(image_traite);
@@ -841,21 +821,21 @@ void  apply_hough(Network* net, char* filename)
     SDL_SaveBMP(image_surface, "hihi.bmp");
 
 
-	update_surface(screen_surface, image_surface);
+	//update_surface(screen_surface, image_surface);
 	
 	//update_surface(screen_surface, image_surface);
-	wait_for_keypressed();
+	//wait_for_keypressed();
 	
 	//Free the image surface.
 	SDL_FreeSurface(image_surface);
 	// Free the screen surface.
-	SDL_FreeSurface(screen_surface);
+	//SDL_FreeSurface(screen_surface);
 
 }
 
 
 
-int main(int argc,char** argv)
+/*int main(int argc,char** argv)
 {
     if (argc != 2)
     {
@@ -874,6 +854,6 @@ int main(int argc,char** argv)
     .w2 = {}
         };
     init_network(&net,0);
-    apply_hough(&net, argv[1]);
+    apply_hough(&net, argv[1], 1);
     return 0;
-}
+}*/

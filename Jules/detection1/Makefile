@@ -10,7 +10,7 @@ LDLIBS= `pkg-config --libs sdl SDL_image` -lSDL_gfx -lm
 
 all: hough
 
-hough: pixel_operations.o display.o rotation.o otsu.o detection.o hough.o
+hough: pixel_operations.o display.o rotation.o otsu.o detection.o matrix.o network.o  hough.o
 
 
 clean:

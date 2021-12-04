@@ -114,3 +114,79 @@ void apply_rotation(SDL_Surface **image_surface, float angle)
     //SDL_FreeSurface (screen_surface);
     //SDL_Quit();
 }
+
+int RotationAuto(SDL_Surface* img,float varMax,int anglevarMax)
+{
+   	int w = img -> w;
+	int h = img -> h;
+	Uint8 r,g,b;
+
+    int hist[h];
+    for (int i =0;i<h;i++)
+    {
+        hist[i]=0;
+    }
+
+    float ut = 0;
+    float E2= 0;
+    //float N = h*w;
+    float varBetween =0;
+ 
+
+    for (int i = 0; i<h;i++)
+    {
+        for (int j=0;j<w;j++)
+        {
+            Uint32 pixel = get_pixel(img, j, i);
+		    SDL_GetRGB(pixel, img->format, &r ,&g,&b);
+            
+            if (r<127)
+            {
+                hist[i]+=1;   
+            }
+        }
+    }
+
+    for (int i = 0;i<h;i++)
+    {
+        ut += hist[i];
+    }
+   
+    ut=ut/h;
+
+    for (int i=0;i<h;i++)
+    {
+        E2+= (hist[i]-ut) * (hist[i]-ut);
+    }
+    
+    E2=E2/h;
+
+    varBetween=sqrt(E2);
+    
+    
+
+    if(anglevarMax<=45 && anglevarMax>=0)
+    {
+        if (varBetween > varMax-1)
+        {
+            varMax = varBetween;
+            anglevarMax+=1; 
+            img=SDL_RotationCentralN (img, 1);
+            return RotationAuto(img,varMax,anglevarMax);
+        }
+
+        if (anglevarMax>37)
+        {
+            return 0; 
+        }
+
+    }
+    else
+    {
+        anglevarMax = -anglevarMax;
+        img=SDL_RotationCentralN (img, anglevarMax);
+    }
+    return anglevarMax;
+    
+}
+
