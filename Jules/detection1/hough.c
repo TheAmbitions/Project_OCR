@@ -9,7 +9,7 @@
 #include "otsu.h"
 #include "rotation.h"
 #include "display.h"
-
+#include "SDL/SDL_rotozoom.h"
 
 SDL_Surface* drawLine(SDL_Surface* surf,int x1,int y1, int x2,int y2)  // Bresenham
 {
@@ -303,6 +303,49 @@ void fill_grid (SDL_Surface* s, int grid[], int pos)
         grid[pos] = 1;
 }
 
+void draw_detection(SDL_Surface* s,SDL_Surface* dest,int x, int y)
+{
+    printf("size s: %i %i\n",s->w,s->h);
+    Uint32 p;
+    Uint8 r,g,b;
+    int i,j;
+    for(i = 0; i<30;i++)
+    {
+        for (j = 0; j<30;j++)
+        {
+            if (i == 0||i==29||j==0||j==29)
+            {
+                //printf("if 1\n");
+                p = SDL_MapRGB(dest->format,255,0,0);
+                put_pixel(dest,j+x,i+y,p); 
+            }
+            else
+            {
+                p = get_pixel(s,j-1,i-1);
+                SDL_GetRGB(p,s->format,&r,&g,&b);
+                if (r<255 || g<255 || b<255)
+                {
+                    put_pixel(dest,j+x,i+y,p); 
+                }
+            }            
+            //printf("w = %i h = %i\nx = %i y =
+            //%i\n\n",dest->w,dest->h,j+x,i+y);
+            
+        }
+    }
+    printf ("sortie %i %i\n",x+j,y+i);
+
+}
+
+SDL_Surface* resize (SDL_Surface *img, int w, int h, int nw,int nh)
+{
+    double zoomx = (double)nw/ (double)w;
+    double zoomy = (double)nh/ (double)h;
+
+    img = zoomSurface(img, zoomx,zoomy, 0);
+    return img;
+}
+
 
 void recognition(char image[], double *ecar)
 {
@@ -330,6 +373,7 @@ void recognition(char image[], double *ecar)
         spriteSrc.x = 0;
         spriteSrc.y = 0;
         
+        SDL_Surface *dest = load_image("blanc1.png");
         int grid[81];
         //int count = 0;
         for (int i = 0; i < 9; i++)
@@ -338,16 +382,21 @@ void recognition(char image[], double *ecar)
                 {
                         surface = SDL_CreateRGBSurface (0, div, div, 32, 0, 0, 0, 0);
                         SDL_BlitSurface(image_surface, &spriteSrc, surface, &spriteCoord);
-                        //otsu(surface);
                         surface = carre (surface);
                         fill_grid(surface,grid,i*9+j);
+                        surface = resize(surface,surface->w,surface->h,28,28);
+                        /*SDL_SaveBMP(surface, "image.bmp");
+                        surface = load_image("image.bmp");*/
+                        draw_detection(surface,dest,j*30,i*30);
+                       /* printf("sortie\n");
                         printf("%i\n",surface==NULL);
                         printf("ligne %i colonne %i\n",i,j);
-                        //dis(surface);
                         SDL_SaveBMP(surface, "image.bmp");
-                        //printf("sortie save\n"); 
-                        display("image.bmp");
-                        //printf("sortie display\n");
+                        display("image.bmp");*/
+                        SDL_SaveBMP(dest,"grille.bmp");
+                        display("grille.bmp");
+
+                        
 
                         /*if (count < 9)
                         {
@@ -360,10 +409,13 @@ void recognition(char image[], double *ecar)
                 spriteSrc.x = 0;
                 spriteSrc.y += div;
        }
+        SDL_SaveBMP(dest,"grille.bmp");
+        display("grille.bmp");
         print_grid(grid);
+        SDL_FreeSurface(dest);
         SDL_FreeSurface(img);
         SDL_FreeSurface(image_surface);
-        SDL_FreeSurface(surface);
+        //SDL_FreeSurface(surface);
         //SDL_Quit();
 }
 
@@ -464,8 +516,6 @@ accum[], double accum_seuil[])
         for (int i = 0; i < 8; i += 2)
         //for (int i = 0; i < nb*2; i += 2)      
         {
-            //printf("draw\n");
-            printf("rho = %lf theta = %lf\n",lignes[i],lignes[i+1]);
             rho = lignes[i];
             theta = lignes[i + 1];
             a = cos(theta);
@@ -504,7 +554,6 @@ accum[], double accum_seuil[])
             printf("error surface\n");
         }
         SDL_SaveBMP(surface, "test.bmp");
-        printf("apres\n");
         recognition("test.bmp", ecar);
         free(ecar);
         return dest;
