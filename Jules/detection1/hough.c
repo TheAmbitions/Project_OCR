@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <err.h>
 #include <math.h>
+#include <string.h>
 #include "SDL/SDL.h"
 #include "SDL/SDL_image.h"
 #include "pixel_operations.h"
@@ -376,6 +377,10 @@ void recognition(char image[], double *ecar)
         SDL_Surface *dest = load_image("blanc1.png");
         int grid[81];
         //int count = 0;
+        char string[] = "./image4/00.bmp";
+        //char tmp[]= "";
+        //char tmpi[]="i";
+        //char tmpj[] ="j";
         for (int i = 0; i < 9; i++)
         {
                 for (int j = 0; j < 9; j++)
@@ -390,9 +395,16 @@ void recognition(char image[], double *ecar)
                         draw_detection(surface,dest,j*30,i*30);
                        /* printf("sortie\n");
                         printf("%i\n",surface==NULL);
-                        printf("ligne %i colonne %i\n",i,j);
-                        SDL_SaveBMP(surface, "image.bmp");
-                        display("image.bmp");*/
+                        printf("ligne %i colonne %i\n",i,j);*/
+                        //tmp = string;
+                       // strcat(tmpi,tmpj);
+                       // tmpj ="" +(char)j;
+                        //strcat(tmpi,tmpj);
+                        //strcat(tmpi,string);
+                        string[9] = (char)i;
+                        string[10] = (char)j;
+                        SDL_SaveBMP(surface, string);
+                        //display("image.bmp");
                         SDL_SaveBMP(dest,"grille.bmp");
                         display("grille.bmp");
 
