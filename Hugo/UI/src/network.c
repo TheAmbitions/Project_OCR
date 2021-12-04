@@ -502,8 +502,31 @@ int apply_network(Network *net, SDL_Surface *image_surface)
 
 void apply_training(Network* net, char* path)
 {
-	net = net;
-	path = path;
+	double y[] = {1, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+	double y1[] = {0, 1, 0, 0, 0, 0, 0, 0, 0, 0};
+	double y2[] = {0, 0, 1, 0, 0, 0, 0, 0, 0, 0};
+	double y3[] = {0, 0, 0, 1, 0, 0, 0, 0, 0, 0};
+	double y4[] = {0, 0, 0, 0, 1, 0, 0, 0, 0, 0};
+	double y5[] = {0, 0, 0, 0, 0, 1, 0, 0, 0, 0};
+	double y6[] = {0, 0, 0, 0, 0, 0, 1, 0, 0, 0};
+	double y7[] = {0, 0, 0, 0, 0, 0, 0, 1, 0, 0};
+	double y8[] = {0, 0, 0, 0, 0, 0, 0, 0, 1, 0};
+	double y9[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 1};
+	for (int i = 0; i < 100; i++)
+	{
+		training_mnist(net, y, "../Image/test_images/0/");
+		training_mnist(net, y1, "../Image/test_images/1/");
+		training_mnist(net, y2, "../Image/test_images/2/");
+		training_mnist(net, y3, "../Image/test_images/3/");
+		training_mnist(net, y4, "../Image/test_images/4/");
+		training_mnist(net, y5, "../Image/test_images/5/");
+		training_mnist(net, y6, "../Image/test_images/6/");
+		training_mnist(net, y7, "../Image/test_images/7/");
+		training_mnist(net, y8, "../Image/test_images/8/");
+		training_mnist(net, y9, "../Image/test_images/9/");
+	}
+
+	save(net, path);
 }
 
 /*

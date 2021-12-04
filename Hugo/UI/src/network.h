@@ -1,6 +1,9 @@
 #ifndef NETWORK_H
 #define NETWORK_H
 
+#include "SDL/SDL.h"
+#include "SDL/SDL_image.h"
+
 #define SIZE 784
 #define LINE 28
 #define HID 30
