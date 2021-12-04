@@ -124,12 +124,74 @@ int BruteSolve(int grid[9][9], int row, int col)
 	return 0;
 }
 
+int isSafe2(int grid[9][9], int row, int col, int num)
+{
+    int count = 0;
+    for (int x = 0; x <= 8; x++)
+        if (grid[row][x] == num)
+            count += 1;
+    if (count > 1)
+    {
+        return 0;
+    }
+    count = 0;
+    for (int x = 0; x <= 8; x++)
+        if (grid[x][col] == num)
+            count += 1;
+
+    if (count > 1)
+    {
+        return 0;
+    }
+    count = 0;
+
+    int startRow = row - row % 3,
+                 startCol = col - col % 3;
+   
+    for (int i = 0; i < 3; i++)
+        for (int j = 0; j < 3; j++)
+            if (grid[i + startRow][j +
+                          startCol] == num)
+                count += 1;
+    if (count > 1)
+    {
+        return 0;
+    }
+    count = 0;
+ 
+    return 1;
+}
+
+int isValid(int grid[9][9])
+{
+    for (int i = 0; i< 9; i++)
+    {
+        for (int j = 0; j<9; j++)
+        {
+            for (int n = 1; n< 10; n++)
+            {
+                if (isSafe2(grid, i, j, n) == 0)
+                {
+                    return 0;
+                }
+            }
+        }
+    }
+    return 1;
+}
+
 int resolve()
 {
 	int grid[9][9];
 
 	initialisation_array(grid);
 	input_sudoku("../data/sudoku.txt", grid);
+
+    //verify if the grid is resolvable
+    if (isValid(grid) == 0)
+    {
+        return 0;
+    }
 	// Resolve the grid
 	if (BruteSolve(grid, 0, 0) == 1)
 	{
