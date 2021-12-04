@@ -377,7 +377,7 @@ void recognition(char image[], double *ecar)
         SDL_Surface *dest = load_image("blanc1.png");
         int grid[81];
         //int count = 0;
-        char string[] = "./image4/00.bmp";
+        char string[] = "./image1/00.bmp";
         //char tmp[]= "";
         //char tmpi[]="i";
         //char tmpj[] ="j";
