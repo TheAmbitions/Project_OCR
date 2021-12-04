@@ -12,6 +12,7 @@
 #include "otsu.h"
 #include "resolve.h"
 #include "display_sudoku.h"
+#include "network.h"
 
 typedef struct UserInterface
 {
@@ -75,6 +76,7 @@ typedef struct Application
     SDL_Surface* image_surface;
     SDL_Surface* dis_img;
 
+    Network network;
     GtkWindow *pro_w;
     Image image;
     UserInterface ui;
@@ -1019,9 +1021,22 @@ int main ()
 	.is_resolve = 0,
 	.is_otsu = 0,
 	.is_generate = 0,
-    .pro_w = NULL,
+        .pro_w = NULL,
         .image_surface = NULL,
         .dis_img = NULL,
+	.network =
+	{
+	    .inputsize = SIZE,
+	    .hiddensize = HID,
+	    .outputsize = OUT,
+	    .input = {},
+	    .values = {},
+	    .output = {},
+	    .b1 = {},
+	    .b2 = {},
+	    .w1 = {},
+	    .w2 = {}, 
+	},
         .image = 
 	{ 
 	    .img = img,
