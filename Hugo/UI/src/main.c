@@ -76,6 +76,7 @@ typedef struct Application
     int is_rot;
     int is_resolve;
     int is_otsu;
+    int is_training;
     int is_generate;
     SDL_Surface* image_surface;
     SDL_Surface* dis_img;
@@ -185,6 +186,7 @@ void openfile(GtkButton *button, gpointer user_data)
 	app->is_rot = 0;
 	app->is_generate = 0;
 	app->is_hough = 0;
+	app->is_training = 0;
 	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(app->ui.bw), FALSE);
         break;
     }
@@ -518,7 +520,7 @@ void on_resolve(GtkButton *button, gpointer user_data)
 
 void on_network(GtkButton *button, gpointer user_data)
 {
-    user_data = user_data;
+    App* app = user_data;
     button = button;
     GtkBuilder* builder = gtk_builder_new();
     GError* error = NULL;
@@ -541,7 +543,9 @@ void on_network(GtkButton *button, gpointer user_data)
         g_signal_connect_swapped(G_OBJECT(pro_w), "destroy", G_CALLBACK(close_window), NULL);
     }
 
-
+    init_network(&(app->network), 0);
+    apply_training(&(app->network), "../data/save.txt");
+    app->is_training = 1;
     FILE* file = NULL;
     file = fopen("../data/is_training.txt", "w");
     if (file != NULL)
@@ -1131,6 +1135,7 @@ int main ()
 	.is_resolve = 0,
 	.is_otsu = 0,
 	.is_generate = 0,
+	.is_training = 0,
         .pro_w = NULL,
         .image_surface = NULL,
         .dis_img = NULL,
