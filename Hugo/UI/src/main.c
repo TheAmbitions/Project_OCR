@@ -13,6 +13,7 @@
 #include "resolve.h"
 #include "display_sudoku.h"
 #include "network.h"
+#include "hough.h"
 
 typedef struct UserInterface
 {
@@ -64,12 +65,13 @@ typedef struct Image
     GtkImage *img;
     SDL_Surface *rot_img;
     SDL_Surface *otsu_img;
-    SDL_Surface *hough;
-    SDL_Surface *cases;
+    SDL_Surface *hough_img;
+    SDL_Surface *cases_img;
 }Image;
 
 typedef struct Application
 {
+    int is_hough;
     gchar* filename;
     int is_rot;
     int is_resolve;
@@ -80,6 +82,7 @@ typedef struct Application
 
     Network network;
     GtkWindow *pro_w;
+    GtkWindow *training_w;
     Image image;
     UserInterface ui;
     cre_sud sud;
@@ -105,6 +108,44 @@ SDL_Surface* resize(SDL_Surface *img)
     }
     return img;
 }
+
+gboolean des_w(App *app)
+{
+    if (app->is_resolve == 1)
+    {
+        gtk_widget_destroy(GTK_WIDGET(app->pro_w));
+    }
+    return TRUE;
+}
+
+gboolean handle_progress(GtkProgressBar* bar);
+
+void close_window(GtkWidget *widget, gpointer w);
+
+void display_pro(App* app)
+{
+    GtkBuilder* builder = gtk_builder_new();
+    GError* error = NULL;
+    if (gtk_builder_add_from_file(builder, "../data/progress.glade", &error) == 0)
+    {
+        g_printerr("Error loading file: %s\n", error->message);
+        g_clear_error(&error);
+    }
+    else
+    {
+        GtkWindow* pro_w = GTK_WINDOW(gtk_builder_get_object(builder, "pro_w"));
+        GtkProgressBar* pro_bar = GTK_PROGRESS_BAR(gtk_builder_get_object(builder, "pro_bar"));
+        GtkLabel *label = GTK_LABEL(gtk_builder_get_object(builder, "label"));
+
+        gtk_label_set_label(label, "Resolving...\n");
+    app->pro_w = pro_w;
+        g_timeout_add(1000, (GSourceFunc)des_w, app);
+        g_timeout_add(1000, (GSourceFunc)handle_progress, pro_bar);
+        gtk_widget_show_all(GTK_WIDGET(pro_w));
+        g_signal_connect_swapped(G_OBJECT(pro_w), "destroy", G_CALLBACK(close_window), NULL);
+    }
+}
+
 
 void openfile(GtkButton *button, gpointer user_data)
 {
@@ -143,6 +184,7 @@ void openfile(GtkButton *button, gpointer user_data)
 	app->is_otsu = 0;
 	app->is_rot = 0;
 	app->is_generate = 0;
+	app->is_hough = 0;
 	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(app->ui.bw), FALSE);
         break;
     }
@@ -291,14 +333,6 @@ gboolean handle_progress(GtkProgressBar* bar)
     return TRUE;
 }
 
-gboolean des_w(App *app)
-{
-    if (app->is_resolve == 1)
-    {
-        gtk_widget_destroy(GTK_WIDGET(app->pro_w));
-    }
-    return TRUE;
-}
 
 void resolve_generate(App *app)
 {
@@ -346,6 +380,62 @@ void resolve_generate(App *app)
 	    display_result();
     }
 }
+
+
+void resolve_auto(App *app)
+{
+    display_pro(app);
+    apply_hough(&(app->network), app->filename, 1);
+    if (resolve() == 0)
+    {
+        GtkWidget *dialog;
+        GtkDialogFlags flags = GTK_DIALOG_DESTROY_WITH_PARENT;
+        dialog = gtk_message_dialog_new_with_markup(app->ui.window,
+            flags,
+            GTK_MESSAGE_ERROR,
+            GTK_BUTTONS_CLOSE,
+            "Error!\n\nCould not resolve!\n\nPlease, verify that the sudoku is resolvable,\nor there was a probleme in the network.");
+
+        gtk_dialog_run(GTK_DIALOG(dialog));
+        g_signal_connect_swapped(dialog, "response",
+            G_CALLBACK(gtk_widget_destroy),
+            dialog);
+        gtk_widget_destroy(dialog);
+    }
+    else
+    {
+    apply_display();
+        display_result();
+    }
+}
+
+void resolve_manual(App* app)
+{
+    display_pro(app);
+    if (resolve() == 0)
+    {
+        GtkWidget* dialog;
+        GtkDialogFlags flags = GTK_DIALOG_DESTROY_WITH_PARENT;
+        dialog = gtk_message_dialog_new_with_markup(app->ui.window,
+            flags,
+            GTK_MESSAGE_ERROR,
+            GTK_BUTTONS_CLOSE,
+            "Error!\n\nCould not resolve!\n\nPlease, verify that the sudoku is resolvable,\nor there was a probleme in the network.");
+
+        gtk_dialog_run(GTK_DIALOG(dialog));
+        g_signal_connect_swapped(dialog, "response",
+            G_CALLBACK(gtk_widget_destroy),
+            dialog);
+        gtk_widget_destroy(dialog);
+    }
+    else
+    {
+        apply_display();
+        display_result();
+    }
+}
+
+
 
 void on_resolve(GtkButton *button, gpointer user_data)
 {
@@ -419,9 +509,9 @@ void on_resolve(GtkButton *button, gpointer user_data)
 	if (app->is_generate == 1)
 	    resolve_generate(app);
 	else if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(app->ui.Auto)) == TRUE)
-	    g_print("Resolve_auto\n");
+	    resolve_auto(app);
 	else
-	    g_print("resolve_manuel\n");
+	    resolve_manual(app);
 	app->is_resolve = 1;
     }
 }
@@ -598,6 +688,10 @@ gboolean IA_recognition(GtkWidget* widget, gpointer user_data)
     if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(app->ui.IA)) == TRUE)
     {
         g_print("ok\n");
+        app->image.cases_img = load_image("../Image/tmp_img/grille.bmp");
+        app->image.cases_img = resize(app->image.cases_img);
+        SDL_SaveBMP(app->image.cases_img, "../Image/tmp_img/cases.bmp");
+        gtk_image_set_from_file(app->image.img, "../Image/tmp_img/cases.bmp");
         return 0;
     }
     else if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(app->ui.IA)) == FALSE)
@@ -670,6 +764,20 @@ gboolean GridDetec(GtkWidget* widget, gpointer user_data)
     if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(app->ui.Grid)) == TRUE)
     {
         gtk_widget_set_sensitive(GTK_WIDGET(app->ui.IA), TRUE);
+        if (app->is_hough == 0)
+    	{
+        	SDL_SaveBMP(app->image_surface, "../Image/tmp_img/hough.bmp");
+        	apply_hough(&(app->network), "../Image/tmp_img/hough.bmp", 0);
+        	app->image.hough_img = load_image("../Image/tmp_img/test.bmp");
+        	app->image.hough_img = resize(app->image.hough_img);
+            	SDL_SaveBMP(app->image.hough_img, "../Image/tmp_img/test.bmp");
+            	gtk_image_set_from_file(app->image.img, "../Image/tmp_img/test.bmp");
+        	app->is_hough = 1;
+    	}
+    	else
+    	{
+        	gtk_image_set_from_file(app->image.img, "../Image/tmp_img/test.bmp");
+       }
         return 0;
     }
     else if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(app->ui.Grid)) == FALSE)
@@ -1026,6 +1134,8 @@ int main ()
         .pro_w = NULL,
         .image_surface = NULL,
         .dis_img = NULL,
+        .training_w = NULL,
+        .is_hough = 0,
 	.network =
 	{
 	    .inputsize = SIZE,
@@ -1044,8 +1154,8 @@ int main ()
 	    .img = img,
 	    .rot_img = NULL,
 	    .otsu_img = NULL,
-	    .hough = NULL,
-	    .cases = NULL,
+	    .hough_img = NULL,
+	    .cases_img = NULL,
 	},
         .ui =
         {

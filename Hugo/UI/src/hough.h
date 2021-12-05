@@ -3,6 +3,6 @@
 
 #include "network.h"
 
-void apply_hough(Network* net, char** filename, int is_auto);
+void apply_hough(Network* net, char* filename, int is_auto);
 
 #endif

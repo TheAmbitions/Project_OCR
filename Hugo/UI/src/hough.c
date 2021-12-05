@@ -387,7 +387,7 @@ void recognition(char image[], double *ecar, Network* net)
         spriteSrc.x = 0;
         spriteSrc.y = 0;
         
-        SDL_Surface *dest = load_image("blanc1.png");
+        SDL_Surface *dest = load_image("../Image/UI_img/blanc1.png");
         int grid[81];
         for (int i = 0; i < 9; i++)
         {
@@ -414,10 +414,10 @@ void recognition(char image[], double *ecar, Network* net)
                 spriteSrc.x = 0;
                 spriteSrc.y += div;
        }
-        SDL_SaveBMP(dest,"grille.bmp");
+        SDL_SaveBMP(dest,"../Image/tmp_img/grille.bmp");
         //display("grille.bmp");
         print_grid2(grid);
-        save_sudoku(grid,"grid.txt");
+        save_sudoku(grid,"../data/sudoku.txt");
         SDL_FreeSurface(dest);
         SDL_FreeSurface(img);
         SDL_FreeSurface(image_surface);
@@ -559,8 +559,8 @@ accum[], double accum_seuil[], Network* net)
         {
             printf("error surface\n");
         }
-        SDL_SaveBMP(surface, "test.bmp");
-        recognition("test.bmp", ecar, net);
+        SDL_SaveBMP(surface, "../Image/tmp_img/test.bmp");
+        recognition("../Image/tmp_img/test.bmp", ecar, net);
         free(ecar);
         return dest;
     }
@@ -668,7 +668,7 @@ SDL_Surface* carre (SDL_Surface* surface)
     Uint32 p;
     //SDL_Surface *s = SDL_CreateRGBSurface (0, w, h, 32, 0, 0, 0, 0);
     //SDL_BlitSurface(surface, NULL, s, NULL);
-    SDL_SaveBMP(surface,"backup.bmp");
+    SDL_SaveBMP(surface,"../Image/tmp_img/backup.bmp");
     do
     {
         f = 0;
@@ -729,7 +729,7 @@ SDL_Surface* carre (SDL_Surface* surface)
         if (x >= w/4 || y >= h/4)
         {
             f=-1;
-            surface = load_image("backup.bmp");
+            surface = load_image("../Image/tmp_img/backup.bmp");
             boucle_fin (surface,w,h);
             return surface;
         }
@@ -802,8 +802,8 @@ void  apply_hough(Network* net, char* filename, int is_auto)
 		//update_surface(screen_surface, image_surface);
 	//screen_surface =  display_image(image_surface);
 	//wait_for_keypressed();
-	SDL_SaveBMP(image_surface, "hihi.bmp");
-    SDL_Surface* image_traite = load_image("hihi.bmp");
+	SDL_SaveBMP(image_surface, "../Image/tmp_img/hihi.bmp");
+    SDL_Surface* image_traite = load_image("../Image/tmp_img/hihi.bmp");
     image_traite = kernel(image_traite);
 
 
@@ -818,7 +818,7 @@ void  apply_hough(Network* net, char* filename, int is_auto)
     printf("avant hough\n\n\n");
     image_surface = hough(image_traite, image_surface,240, accum, accum_seuil, net);
     printf("apres hough\n\n");
-    SDL_SaveBMP(image_surface, "hihi.bmp");
+    SDL_SaveBMP(image_surface, "../Image/tmp_img/hihi.bmp");
 
 
 	//update_surface(screen_surface, image_surface);
@@ -827,6 +827,7 @@ void  apply_hough(Network* net, char* filename, int is_auto)
 	//wait_for_keypressed();
 	
 	//Free the image surface.
+	SDL_FreeSurface(image_traite);
 	SDL_FreeSurface(image_surface);
 	// Free the screen surface.
 	//SDL_FreeSurface(screen_surface);
