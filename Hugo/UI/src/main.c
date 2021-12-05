@@ -13,6 +13,7 @@
 #include "resolve.h"
 #include "display_sudoku.h"
 #include "network.h"
+#include "hough.h"
 
 typedef struct UserInterface
 {
@@ -64,8 +65,8 @@ typedef struct Image
     GtkImage *img;
     SDL_Surface *rot_img;
     SDL_Surface *otsu_img;
-    SDL_Surface *hough;
-    SDL_Surface *cases;
+    SDL_Surface *hough_img;
+    SDL_Surface *cases_img;
 }Image;
 
 typedef struct Application
@@ -74,23 +75,20 @@ typedef struct Application
     int is_rot;
     int is_resolve;
     int is_otsu;
+    int is_hough;
+    int is_training;
     int is_generate;
     SDL_Surface* image_surface;
     SDL_Surface* dis_img;
 
     Network network;
     GtkWindow *pro_w;
+    GtkWindow* training_w;
     Image image;
     UserInterface ui;
     cre_sud sud;
 }App;
 
-typedef struct ProgressBar
-{
-    int is_training;
-    GtkDialog *pro_w;
-    GtkProgressBar* pro_bar;
-}Bar;
 
 SDL_Surface* resize(SDL_Surface *img)
 {
@@ -143,6 +141,8 @@ void openfile(GtkButton *button, gpointer user_data)
 	app->is_otsu = 0;
 	app->is_rot = 0;
 	app->is_generate = 0;
+	app->is_training = 0;
+	app->is_hough = 0;
 	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(app->ui.bw), FALSE);
         break;
     }
@@ -300,8 +300,33 @@ gboolean des_w(App *app)
     return TRUE;
 }
 
+void display_pro(App* app)
+{
+    GtkBuilder* builder = gtk_builder_new();
+    GError* error = NULL;
+    if (gtk_builder_add_from_file(builder, "../data/progress.glade", &error) == 0)
+    {
+        g_printerr("Error loading file: %s\n", error->message);
+        g_clear_error(&error);
+    }
+    else
+    {
+        GtkWindow* pro_w = GTK_WINDOW(gtk_builder_get_object(builder, "pro_w"));
+        GtkProgressBar* pro_bar = GTK_PROGRESS_BAR(gtk_builder_get_object(builder, "pro_bar"));
+        GtkLabel *label = GTK_LABEL(gtk_builder_get_object(builder, "label"));
+
+        gtk_label_set_label(label, "Resolving...\n");
+	app->pro_w = pro_w;
+        g_timeout_add(1000, (GSourceFunc)des_w, app);
+        g_timeout_add(1000, (GSourceFunc)handle_progress, pro_bar);
+        gtk_widget_show_all(GTK_WIDGET(pro_w));
+        g_signal_connect_swapped(G_OBJECT(pro_w), "destroy", G_CALLBACK(close_window), NULL);
+    }
+}
+
 void resolve_generate(App *app)
 {
+    display_pro(app);
     if (resolve() == 0)
     {
 	GtkWidget* dialog;
@@ -320,7 +345,7 @@ void resolve_generate(App *app)
     }
     else
     {
-        GtkBuilder* builder = gtk_builder_new();
+        /*GtkBuilder* builder = gtk_builder_new();
         GError* error = NULL;
         if (gtk_builder_add_from_file(builder, "../data/progress.glade", &error) == 0)
         {
@@ -334,16 +359,69 @@ void resolve_generate(App *app)
 	    GtkLabel *label = GTK_LABEL(gtk_builder_get_object(builder, "label"));
 	
 	    gtk_label_set_label(label, "Resolving...\n");
-        app->pro_w = pro_w;
+            app->pro_w = pro_w;
 
             g_timeout_add(1000, (GSourceFunc)handle_progress, pro_bar);
             g_timeout_add(1000, (GSourceFunc)des_w, app);
             gtk_widget_show_all(GTK_WIDGET(pro_w));
             g_signal_connect_swapped(G_OBJECT(pro_w), "destroy", G_CALLBACK(close_window), NULL);
-        }
+        }*/
 
-	    apply_display();
-	    display_result();
+	apply_display();
+        display_result();
+    }
+}
+
+void resolve_auto(App *app)
+{
+    display_pro(app);
+    apply_hough(&(app->network), app->filename, 1);
+    if (resolve() == 0)
+    {
+        GtkWidget* dialog;
+        GtkDialogFlags flags = GTK_DIALOG_DESTROY_WITH_PARENT;
+        dialog = gtk_message_dialog_new_with_markup(app->ui.window,
+            flags,
+            GTK_MESSAGE_ERROR,
+            GTK_BUTTONS_CLOSE,
+            "Error!\n\nCould not resolve!\n\nPlease, verify that the sudoku is resolvable,\nor there was a probleme in the network.");
+
+        gtk_dialog_run(GTK_DIALOG(dialog));
+        g_signal_connect_swapped(dialog, "response",
+            G_CALLBACK(gtk_widget_destroy),
+            dialog);
+        gtk_widget_destroy(dialog);
+    }
+    else
+    {
+	apply_display();
+        display_result();
+    }
+}
+
+void resolve_manual(App* app)
+{
+    display_pro(app);
+    if (resolve() == 0)
+    {
+        GtkWidget* dialog;
+        GtkDialogFlags flags = GTK_DIALOG_DESTROY_WITH_PARENT;
+        dialog = gtk_message_dialog_new_with_markup(app->ui.window,
+            flags,
+            GTK_MESSAGE_ERROR,
+            GTK_BUTTONS_CLOSE,
+            "Error!\n\nCould not resolve!\n\nPlease, verify that the sudoku is resolvable,\nor there was a probleme in the network.");
+
+        gtk_dialog_run(GTK_DIALOG(dialog));
+        g_signal_connect_swapped(dialog, "response",
+            G_CALLBACK(gtk_widget_destroy),
+            dialog);
+        gtk_widget_destroy(dialog);
+    }
+    else
+    {
+        apply_display();
+        display_result();
     }
 }
 
@@ -419,16 +497,25 @@ void on_resolve(GtkButton *button, gpointer user_data)
 	if (app->is_generate == 1)
 	    resolve_generate(app);
 	else if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(app->ui.Auto)) == TRUE)
-	    g_print("Resolve_auto\n");
+	    resolve_auto(app);
 	else
-	    g_print("resolve_manuel\n");
+	    resolve_manual(app);
 	app->is_resolve = 1;
     }
 }
 
+gboolean des_training(App* app)
+{
+    if (app->is_training == 1)
+    {
+        gtk_widget_destroy(GTK_WIDGET(app->training_w));
+    }
+    return 0;
+}
+
 void on_network(GtkButton *button, gpointer user_data)
 {
-    user_data = user_data;
+    App* app = user_data;
     button = button;
     GtkBuilder* builder = gtk_builder_new();
     GError* error = NULL;
@@ -446,20 +533,25 @@ void on_network(GtkButton *button, gpointer user_data)
 	gtk_label_set_label(label, "Network training...\n");
 
         g_timeout_add(1000, (GSourceFunc)handle_progress, pro_bar);
+	g_timeout_add(1000, (GSourceFunc)des_training, app);
+
+	app->training_w = pro_w;
 
         gtk_widget_show_all(GTK_WIDGET(pro_w));
         g_signal_connect_swapped(G_OBJECT(pro_w), "destroy", G_CALLBACK(close_window), NULL);
+
+	init_network(&(app->network), 0);
+   	apply_training(&(app->network), "../data/save.txt");
+	app->is_training = 1;
+        FILE* file = NULL;
+        file = fopen("../data/is_training.txt", "w");
+        if (file != NULL)
+        {
+            fprintf(file, "1");
+        }
+
+        fclose(file);
     }
-
-
-    FILE* file = NULL;
-    file = fopen("../data/is_training.txt", "w");
-    if (file != NULL)
-    {
-        fprintf(file, "1");
-    }
-
-    fclose(file);
 }
 
 gboolean Automatic(GtkWidget* widget, gpointer user_data)
@@ -597,7 +689,10 @@ gboolean IA_recognition(GtkWidget* widget, gpointer user_data)
 
     if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(app->ui.IA)) == TRUE)
     {
-        g_print("ok\n");
+        app->image.cases_img = load_image("../Image/tmp_img/grille.bmp");
+        app->image.cases_img = resize(app->image.cases_img);
+        SDL_SaveBMP(app->image.cases_img, "../Image/tmp_img/cases.bmp");
+        gtk_image_set_from_file(app->image.img, "../Image/tmp_img/cases.bmp");
         return 0;
     }
     else if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(app->ui.IA)) == FALSE)
@@ -670,6 +765,18 @@ gboolean GridDetec(GtkWidget* widget, gpointer user_data)
     if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(app->ui.Grid)) == TRUE)
     {
         gtk_widget_set_sensitive(GTK_WIDGET(app->ui.IA), TRUE);
+	if (app->is_hough == 0)
+	{
+	    SDL_SaveBMP(app->image_surface, "../Image/tmp_img/hough.bmp");
+	    apply_hough(&(app->network), "../Image/tmp_img/hough.bmp", 0);
+	    app->image.hough_img = load_image("../Image/tmp_img/test.bmp");
+	    app->image.hough_img = resize(app->image.hough_img);
+            SDL_SaveBMP(app->image.hough_img, "../Image/tmp_img/test.bmp");
+            gtk_image_set_from_file(app->image.img, "../Image/tmp_img/test.bmp");
+	    app->is_hough = 1;
+	}
+	else
+	    gtk_image_set_from_file(app->image.img, "../Image/tmp_img/hough2.bmp");
         return 0;
     }
     else if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(app->ui.Grid)) == FALSE)
@@ -1022,8 +1129,11 @@ int main ()
 	.is_rot = 0,
 	.is_resolve = 0,
 	.is_otsu = 0,
+	.is_hough = 0,
 	.is_generate = 0,
+	.is_training = 0,
         .pro_w = NULL,
+	.training_w = NULL,
         .image_surface = NULL,
         .dis_img = NULL,
 	.network =
@@ -1044,8 +1154,8 @@ int main ()
 	    .img = img,
 	    .rot_img = NULL,
 	    .otsu_img = NULL,
-	    .hough = NULL,
-	    .cases = NULL,
+	    .hough_img = NULL,
+	    .cases_img = NULL,
 	},
         .ui =
         {
@@ -1125,6 +1235,8 @@ int main ()
     SDL_FreeSurface(app.dis_img);
     SDL_FreeSurface(app.image.otsu_img);
     SDL_FreeSurface(app.image.rot_img);
+    SDL_FreeSurface(app.image.hough_img);
+    SDL_FreeSurface(app.image.cases_img);
 
     return 0;
 }

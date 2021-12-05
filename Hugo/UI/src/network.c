@@ -89,7 +89,7 @@ void feedforward(Network* net)
 
 /*------------------------------------------------------------------------------ Backprop --------------------------------------------------------------------------------*/
 
-void adjust_weights(size_t line, size_t col, double m1[], double m2[], double w[line][col])
+void adjust_weights2(size_t line, size_t col, double m1[], double m2[], double w[line][col])
 {
 	size_t i, j;
 
@@ -102,7 +102,7 @@ void adjust_weights(size_t line, size_t col, double m1[], double m2[], double w[
 
 //To respect the condition of 80 words/ligne:
 //y -> expected array
-void backprop(Network *net, double y[], float eta)
+void backprop2(Network *net, double y[], float eta)
 {
 	//update errors of the output layer
 	size_t i;
@@ -121,10 +121,58 @@ void backprop(Network *net, double y[], float eta)
 	for (i = 0; i < net->hiddensize; i++)
 		z2_delta[i] = z2_delta[i] * sigmoid_prime(net->values[i]) * eta;
 
-	//update w1 of the network
-	adjust_weights(net->inputsize, net->hiddensize, net->input, z2_delta, net->w1);
 	//update w2 of the network
-        adjust_weights(net->hiddensize, net->outputsize, net->values, net->output, net->w2);
+        adjust_weights2(net->hiddensize, net->outputsize, net->values, net->output, net->w2);
+	//update w1 of the network
+	adjust_weights2(net->inputsize, net->hiddensize, net->input, z2_delta, net->w1);
+}
+
+void adjust_weights(size_t line, size_t col, double m1[], double m2[], double w[line][col], float eta)
+{
+	size_t i, j;
+
+	for (i = 0; i < line; i++)
+	{
+		for (j = 0; j < col; j++)
+			w[i][j] = w[i][j] - eta * (m1[i] * m2[j]);
+	}
+}
+
+void ajust_bias(size_t size, double m1[], double m2[], float eta)
+{
+	size_t i;
+	for (i = 0; i < size; i++)
+	{
+		m1[i] = m1[i] - eta * m2[i];
+	}
+}
+
+
+void backprop(Network *net, double y[], float eta)
+{
+	//update errors of the output layer
+	size_t i;
+	for (i = 0; i < net->outputsize; i++)
+	{
+		net->output[i] = (y[i] - net->output[i]) * sigmoid_prime(net->output[i]);
+	}
+
+	//update errors of the hidden layer
+	double w2_t[net->outputsize][net->hiddensize];
+	transpose(net->hiddensize, net->outputsize, net->w2, w2_t);
+
+	double z2_delta[net->hiddensize];
+	matrix_product(1, net->outputsize, net->hiddensize, net->output, w2_t, z2_delta);
+
+	for (i = 0; i < net->hiddensize; i++)
+		z2_delta[i] = z2_delta[i] * sigmoid_prime(net->values[i]);
+
+	//update w2 of the network
+        adjust_weights(net->hiddensize, net->outputsize, net->values, net->output, net->w2, eta);
+        ajust_bias(net->outputsize, net->b2, net->output, eta);
+	//update w1 of the network
+	adjust_weights(net->inputsize, net->hiddensize, net->input, z2_delta, net->w1, eta);
+	ajust_bias(net->hiddensize, net->b1, z2_delta, eta);
 }
 
 /*------------------------------------------------------------------------------ Init network --------------------------------------------------------------------------------*/
@@ -311,8 +359,14 @@ void training_mnist(Network* net, double y[], char *path)
     fileread = readdir(rep);
     while (fileread != NULL)
     {
+	if (fileread->d_name[0] == '.')
+	{   
+	    fileread = readdir(rep);	
+	    continue;
+	}
 	strcpy(dest, copy);
 	strcat(dest, fileread->d_name);
+	//printf("%s\n", dest);
 	SDL_Surface* image_surface = load_image(dest);
 
         int width = image_surface->w;
@@ -327,15 +381,17 @@ void training_mnist(Network* net, double y[], char *path)
                         p = get_pixel(image_surface, j, i);
                         SDL_GetRGB(p, image_surface->format, &r, &g, &b);
                         if ((r + g + b) / 3 <= 127)
-                                net->input[i * height + j] = 0;
-                        else
                                 net->input[i * height + j] = 1;
+                        else
+                                net->input[i * height + j] = 0;
                 }
         }
 	feedforward(net);
-	backprop(net, y, 0.01);
+	//backprop2(net, y, 0.1);
+	backprop(net, y, 0.1);
 	fileread = readdir(rep);
     }
+    //printf("ok\n");
     
     if (closedir(rep) == -1)
 	    return;
@@ -500,6 +556,59 @@ int apply_network(Network *net, SDL_Surface *image_surface)
 	return (int)eval(net->output);
 }
 
+void apply_test(Network* net, char* path, int expected)
+{
+	DIR* rep = NULL;
+    	rep = opendir(path);
+    	if (rep == NULL)
+            return;
+
+    	struct dirent* fileread = NULL;
+    	char dest[100] = "";
+    	strcat(dest, path);
+    	char copy[100] = "";
+    	strcat(copy, path);
+
+    	fileread = readdir(rep);
+    	fileread = readdir(rep);
+    	fileread = readdir(rep);
+    	while (fileread != NULL)
+    	{	
+    		if (fileread->d_name[0] == '.' || fileread->d_name[0] == '\0')
+    		{
+    			fileread = readdir(rep);
+    			continue;
+    		}
+		strcpy(dest, copy);
+		strcat(dest, fileread->d_name);
+		SDL_Surface* image_surface = load_image(dest);
+
+		int width = image_surface->w;
+		int height = image_surface->h;
+		Uint32 p;
+		Uint8 r, g, b;
+		int i, j;
+		for (i = 0; i < height; i++)
+		{
+			for (j = 0; j < width; j++)
+			{
+				p = get_pixel(image_surface, j, i);
+				SDL_GetRGB(p, image_surface->format, &r, &g, &b);
+				if ((r + g + b) / 3 <= 127)
+					net->input[i * height + j] = 1;
+				else
+					net->input[i * height + j] = 0;
+			}
+		}
+	
+		feedforward(net);
+		printf("Expected : %i | return value : %li\n", expected, eval(net->output));
+	}
+	
+	if (closedir(rep) == -1)
+            return;
+}
+
 void apply_training(Network* net, char* path)
 {
 	double y[] = {1, 0, 0, 0, 0, 0, 0, 0, 0, 0};
@@ -512,7 +621,7 @@ void apply_training(Network* net, char* path)
 	double y7[] = {0, 0, 0, 0, 0, 0, 0, 1, 0, 0};
 	double y8[] = {0, 0, 0, 0, 0, 0, 0, 0, 1, 0};
 	double y9[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 1};
-	for (int i = 0; i < 100; i++)
+	for (int i = 0; i < 5000; i++)
 	{
 		training_mnist(net, y, "../Image/test_images/0/");
 		training_mnist(net, y1, "../Image/test_images/1/");
@@ -524,9 +633,21 @@ void apply_training(Network* net, char* path)
 		training_mnist(net, y7, "../Image/test_images/7/");
 		training_mnist(net, y8, "../Image/test_images/8/");
 		training_mnist(net, y9, "../Image/test_images/9/");
+		printf("Itération %i -> OK\n", i);
 	}
-
+	
 	save(net, path);
+	printf("save\n");
+	/*apply_test(net, "../Image/test_images/O/", 0);
+	apply_test(net, "../Image/test_images/1/", 1);
+	apply_test(net, "../Image/test_images/2/", 2);
+	apply_test(net, "../Image/test_images/3/", 3);
+	apply_test(net, "../Image/test_images/4/", 4);
+	apply_test(net, "../Image/test_images/5/", 5);
+	apply_test(net, "../Image/test_images/6/", 6);
+	apply_test(net, "../Image/test_images/7/", 7);
+	apply_test(net, "../Image/test_images/8/", 8);
+	apply_test(net, "../Image/test_images/9/", 9);*/
 }
 
 /*
