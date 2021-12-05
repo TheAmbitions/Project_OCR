@@ -745,7 +745,7 @@ SDL_Surface* carre (SDL_Surface* surface)
 
 void  apply_hough(Network* net, char* filename, int is_auto)
 {
-	
+	init_network(net,0);
 	SDL_Surface* image_surface;
 	//SDL_Surface* screen_surface;
 
@@ -783,7 +783,7 @@ void  apply_hough(Network* net, char* filename, int is_auto)
 	//otsu(image_surface);
     	if (is_auto)
     	{
-    		ot(image_surface);
+    		otsu(image_surface);
 		//screen_surface =  display_image(image_surface);
 		//wait_for_keypressed();
 		//image_surface = sobel(image_surface);
